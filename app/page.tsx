@@ -13,7 +13,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { useStreamHistory } from '@/hooks/useStreamHistory';
 import { HlsMetrics, StreamHealth, StreamValidationResult } from '@/types/stream';
 
-const DEFAULT_SAMPLE_URL = 'http://40.160.24.55/TSN_4/index.m3u8';
+const DEFAULT_SAMPLE_URL = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/adv_dv_atmos/main.m3u8';
 
 function MainAppContent() {
   const searchParams = useSearchParams();
@@ -21,7 +21,7 @@ function MainAppContent() {
 
   const [activeTab, setActiveTab] = useState<'player' | 'multiview' | 'history' | 'settings'>('player');
   const [currentUrl, setCurrentUrl] = useState(DEFAULT_SAMPLE_URL);
-  const [useProxy, setUseProxy] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
   const [validation, setValidation] = useState<StreamValidationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,7 +54,7 @@ function MainAppContent() {
     }
     setActiveTab('player');
 
-    saveToHistory(url, url === DEFAULT_SAMPLE_URL ? 'TSN 4 Live Channel' : undefined, validationResult?.resolution || '1080p');
+    saveToHistory(url, url === DEFAULT_SAMPLE_URL ? 'Apple Advanced 4K Channel' : undefined, validationResult?.resolution || '1080p');
   }, [saveToHistory]);
 
   const validateDefaultStream = useCallback(async () => {
@@ -122,7 +122,7 @@ function MainAppContent() {
               setUseProxy={setUseProxy}
               onMetricsUpdate={setMetrics}
               onHealthUpdate={setHealth}
-              title={currentUrl === DEFAULT_SAMPLE_URL ? 'TSN 4 Live Channel' : currentUrl}
+              title={currentUrl === DEFAULT_SAMPLE_URL ? 'Apple Advanced 4K Channel' : currentUrl}
             />
           </div>
 
@@ -151,8 +151,8 @@ function MainAppContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0B0B0C] text-white flex items-center justify-center font-mono text-xs">
-        Loading Live HLS Hub...
+      <div className="min-h-screen bg-[#0B0B0C] text-[#F4F4F5] flex items-center justify-center font-mono text-xs">
+        Loading Broadcast HLS...
       </div>
     }>
       <MainAppContent />
