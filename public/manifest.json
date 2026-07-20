@@ -1,0 +1,17 @@
+{
+  "name": "Live HLS Streaming Platform",
+  "short_name": "Live HLS",
+  "description": "Commercial-grade live HLS video player with CORS proxy, 4K UHD support, and multi-view grid.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0B0C",
+  "theme_color": "#0B0B0C",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
