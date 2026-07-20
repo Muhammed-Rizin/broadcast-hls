@@ -9,6 +9,8 @@ interface KeyboardShortcutsOptions {
   onJumpToLive?: () => void;
   onSeekBackward10?: () => void;
   onSeekForward10?: () => void;
+  onNextChannel?: () => void;
+  onPrevChannel?: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -18,6 +20,8 @@ export function useKeyboardShortcuts({
   onJumpToLive,
   onSeekBackward10,
   onSeekForward10,
+  onNextChannel,
+  onPrevChannel,
 }: KeyboardShortcutsOptions) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,8 +56,23 @@ export function useKeyboardShortcuts({
           if (onSeekBackward10) onSeekBackward10();
           break;
         case 'KeyL':
+        case 'ArrowRight':
           e.preventDefault();
           if (onSeekForward10) onSeekForward10();
+          break;
+        case 'KeyN':
+        case 'PageDown':
+          e.preventDefault();
+          if (onNextChannel) onNextChannel();
+          break;
+        case 'KeyP':
+        case 'PageUp':
+          e.preventDefault();
+          if (onPrevChannel) onPrevChannel();
+          break;
+        case 'Digit0':
+          e.preventDefault();
+          if (onJumpToLive) onJumpToLive();
           break;
         default:
           break;
@@ -69,5 +88,7 @@ export function useKeyboardShortcuts({
     onJumpToLive,
     onSeekBackward10,
     onSeekForward10,
+    onNextChannel,
+    onPrevChannel,
   ]);
 }

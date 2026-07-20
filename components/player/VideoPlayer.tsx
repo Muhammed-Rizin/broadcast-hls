@@ -19,6 +19,8 @@ interface VideoPlayerProps {
   onHealthUpdate?: (health: StreamHealth) => void;
   title?: string;
   autoPlay?: boolean;
+  onNextChannel?: () => void;
+  onPrevChannel?: () => void;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -29,9 +31,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onHealthUpdate,
   title,
   autoPlay = true,
+  onNextChannel,
+  onPrevChannel,
 }) => {
-  const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [lowLatencyMode, setLowLatencyMode] = useState(true);
@@ -60,9 +62,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     currentAudioTrack,
     subtitleTracks,
     currentSubtitleTrack,
+    isMuted: hlsIsMuted,
+    volume: hlsVolume,
     togglePlay,
     jumpToLive,
     seekBy,
+    seekTo,
     selectQuality,
     selectAudioTrack,
     selectSubtitleTrack,
@@ -74,6 +79,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (onMetricsUpdate) onMetricsUpdate(metrics);
     if (onHealthUpdate) onHealthUpdate(health);
   }, [metrics, health, onMetricsUpdate, onHealthUpdate]);
+
+  // Sync fullscreen state with document fullscreenchange event
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Handle inactivity auto-hide controls timer
   const handleUserInteraction = () => {
@@ -96,18 +111,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Handle volume changes
   const handleVolumeChange = (newVol: number) => {
-    setVolume(newVol);
     if (videoRef.current) {
       videoRef.current.volume = newVol;
-      setIsMuted(newVol === 0);
+      videoRef.current.muted = newVol === 0;
     }
   };
 
   const toggleMute = () => {
     if (!videoRef.current) return;
-    const nextMuted = !isMuted;
-    setIsMuted(nextMuted);
-    videoRef.current.muted = nextMuted;
+    videoRef.current.muted = !videoRef.current.muted;
   };
 
   // Playback speed change
@@ -124,9 +136,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!container) return;
 
     if (!document.fullscreenElement) {
-      container.requestFullscreen().then(() => setIsFullscreen(true)).catch(console.error);
+      container.requestFullscreen().catch(console.error);
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(console.error);
+      document.exitFullscreen().catch(console.error);
     }
   };
 
@@ -152,6 +164,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     onJumpToLive: jumpToLive,
     onSeekBackward10: () => seekBy(-10),
     onSeekForward10: () => seekBy(10),
+    onNextChannel,
+    onPrevChannel,
   });
 
   if (!streamUrl) {
@@ -169,7 +183,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         ref={videoRef}
         className="video-element"
         playsInline
-        onClick={togglePlay}
+        onClick={() => {
+          if (!showControls && isPlaying) {
+            setShowControls(true);
+          } else {
+            togglePlay();
+          }
+        }}
       />
 
       {/* Granular Loading Status & HTTP Error Overlay */}
@@ -189,9 +209,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       }`}>
         <PlayerControls
           isPlaying={isPlaying}
-          isMuted={isMuted}
-          volume={volume}
+          isMuted={hlsIsMuted}
+          volume={hlsVolume}
           health={health}
+          metrics={metrics}
           title={title}
           useProxy={useProxy}
           setUseProxy={setUseProxy}
@@ -206,7 +227,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onTogglePlay={togglePlay}
           onToggleMute={toggleMute}
           onVolumeChange={handleVolumeChange}
-          onSeek={(time) => seekBy(time - (videoRef.current?.currentTime || 0))}
+          onSeek={seekTo}
           onSeekBackward10={() => seekBy(-10)}
           onSeekForward10={() => seekBy(10)}
           onJumpToLive={jumpToLive}
@@ -220,6 +241,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onOpenStreamInfo={() => setIsStreamInfoOpen(true)}
           onOpenShortcuts={() => setIsShortcutsOpen(true)}
           onOpenShareModal={() => setIsShareModalOpen(true)}
+          onNextChannel={onNextChannel}
+          onPrevChannel={onPrevChannel}
           isFullscreen={isFullscreen}
         />
       </div>

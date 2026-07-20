@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Settings,
   Sliders,
@@ -58,23 +58,24 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
 
   const speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
-  // Deduplicate qualities by resolution height (keeping the highest bitrate variant for each distinct resolution height)
-  const uniqueQualitiesMap = new Map<number | string, QualityLevel>();
-  qualities.forEach((q) => {
-    const key = q.height || q.bitrate || q.id;
-    const existing = uniqueQualitiesMap.get(key);
-    if (!existing || (q.bitrate && q.bitrate > (existing.bitrate || 0))) {
-      uniqueQualitiesMap.set(key, q);
-    }
-  });
+  // Deduplicate and sort qualities with useMemo
+  const sortedQualities = useMemo(() => {
+    const uniqueQualitiesMap = new Map<number | string, QualityLevel>();
+    qualities.forEach((q) => {
+      const key = q.height || q.bitrate || q.id;
+      const existing = uniqueQualitiesMap.get(key);
+      if (!existing || (q.bitrate && q.bitrate > (existing.bitrate || 0))) {
+        uniqueQualitiesMap.set(key, q);
+      }
+    });
 
-  // Sort unique qualities in descending order (highest resolution on top)
-  const sortedQualities = Array.from(uniqueQualitiesMap.values()).sort((a, b) => {
-    const heightA = a.height || 0;
-    const heightB = b.height || 0;
-    if (heightB !== heightA) return heightB - heightA;
-    return (b.bitrate || 0) - (a.bitrate || 0);
-  });
+    return Array.from(uniqueQualitiesMap.values()).sort((a, b) => {
+      const heightA = a.height || 0;
+      const heightB = b.height || 0;
+      if (heightB !== heightA) return heightB - heightA;
+      return (b.bitrate || 0) - (a.bitrate || 0);
+    });
+  }, [qualities]);
 
   const getActiveQualityName = () => {
     if (currentQualityIndex === -1) return 'Auto';
@@ -101,7 +102,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
           setIsOpen(!isOpen);
           setViewMode('main');
         }}
-        className={`p-2 rounded-[8px] border transition-all ${
+        className={`p-2 sm:p-2.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-[8px] border transition-all ${
           isOpen
             ? 'bg-white text-black border-white shadow-lg'
             : 'bg-[#18181C]/90 hover:bg-[#27272A] border-white/10 text-[#B6B6B8] hover:text-white'
@@ -113,7 +114,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
 
       {/* Flyout Popover Container */}
       {isOpen && (
-        <div className="absolute bottom-12 right-0 w-72 max-w-[calc(100vw-1.5rem)] bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn">
+        <div className="absolute bottom-12 right-0 w-72 max-w-[calc(100vw-2rem)] bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn">
           {viewMode === 'main' && (
             <div className="space-y-1">
               <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1">
@@ -262,7 +263,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
             </button>
           )}
 
-          {/* Quality Submenu (Unique resolution heights only) */}
+          {/* Quality Submenu */}
           {viewMode === 'quality' && (
             <div className="space-y-1 py-1 max-h-60 overflow-y-auto">
               <button

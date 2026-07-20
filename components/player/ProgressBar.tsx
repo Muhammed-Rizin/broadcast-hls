@@ -15,15 +15,15 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   duration,
   bufferLength,
   onSeek,
-  isLive = true,
+  isLive = false,
 }) => {
   const barRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
 
   // Calculate percentage ratios
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 100;
-  const bufferPercent = duration > 0 ? Math.min(100, ((currentTime + bufferLength) / duration) * 100) : 100;
+  const progressPercent = duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : (isLive ? 100 : 0);
+  const bufferPercent = duration > 0 ? Math.min(100, ((currentTime + bufferLength) / duration) * 100) : (isLive ? 100 : 0);
 
   const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!barRef.current || duration <= 0) return;
@@ -51,10 +51,10 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         setHoverPosition(null);
       }}
       onMouseMove={handleMouseMove}
-      className="relative w-full h-3 flex items-center cursor-pointer group py-1"
+      className="relative w-full h-4 flex items-center cursor-pointer group py-1"
     >
       {/* Background Track */}
-      <div className="w-full h-1 bg-[#2A2A2D] rounded-full overflow-hidden relative transition-all group-hover:h-1.5">
+      <div className="w-full h-1.5 bg-[#2A2A2D] rounded-full overflow-hidden relative transition-all group-hover:h-2">
         {/* Buffered Range */}
         <div
           className="absolute top-0 bottom-0 left-0 bg-[#555558] transition-all duration-150"
@@ -69,7 +69,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       </div>
 
       {/* Hover Position Guide Line */}
-      {isHovered && hoverPosition !== null && !isLive && (
+      {isHovered && hoverPosition !== null && duration > 0 && (
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-white/60 pointer-events-none"
           style={{ left: `${hoverPosition}%` }}
@@ -77,10 +77,10 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       )}
 
       {/* Seek Handle Thumb */}
-      {!isLive && (
+      {duration > 0 && (
         <div
-          className={`absolute w-3 h-3 bg-[#FF3B30] rounded-full shadow-md transition-transform duration-100 -translate-x-1/2 ${
-            isHovered ? 'scale-125' : 'scale-0 group-hover:scale-100'
+          className={`absolute w-3.5 h-3.5 bg-[#FF3B30] rounded-full shadow-md transition-transform duration-100 -translate-x-1/2 ${
+            isHovered ? 'scale-125' : 'scale-100'
           }`}
           style={{ left: `${progressPercent}%` }}
         />

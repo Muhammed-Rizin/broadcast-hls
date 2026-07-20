@@ -49,6 +49,10 @@ export interface HlsMetrics {
   downloadSpeedBps: number;
   segmentNumber: number;
   liveDelay: number; // in seconds
+  currentTime?: number;
+  duration?: number;
+  seekableStart?: number;
+  seekableEnd?: number;
 }
 
 export interface QualityLevel {

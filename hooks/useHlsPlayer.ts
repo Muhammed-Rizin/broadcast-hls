@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
 import { HlsMetrics, QualityLevel, StreamHealth, TrackInfo } from '@/types/stream';
 
@@ -33,6 +33,9 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
+  const reconnectAttemptRef = useRef(0);
+  const mediaErrorRetryCountRef = useRef(0);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(true);
   const [granularStatus, setGranularStatus] = useState<GranularStatus>('Connecting...');
@@ -46,8 +49,11 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
   const [subtitleTracks, setSubtitleTracks] = useState<TrackInfo[]>([]);
   const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1);
 
+  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
   const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [isReconnecting, setIsReconnecting] = useState(false);
+
   const maxRetries = 5;
   const reconnectDelays = [1000, 2000, 4000, 8000, 16000];
 
@@ -71,11 +77,61 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
     downloadSpeedBps: 0,
     segmentNumber: 0,
     liveDelay: 0,
+    currentTime: 0,
+    duration: 0,
+    seekableStart: 0,
+    seekableEnd: 0,
   });
 
   const activeUrl = useProxy
     ? `/api/stream/proxy?url=${encodeURIComponent(streamUrl)}`
     : streamUrl;
+
+  const handleNetworkError = useCallback(() => {
+    if (reconnectAttemptRef.current >= maxRetries) {
+      setErrorCode('NETWORK_ERROR');
+      setErrorDetails('Stream connection lost. Max reconnect retries reached.');
+      setIsReconnecting(false);
+      return;
+    }
+
+    reconnectAttemptRef.current += 1;
+    const currentAttempt = reconnectAttemptRef.current;
+    setReconnectAttempt(currentAttempt);
+    setIsReconnecting(true);
+    setGranularStatus('Retrying...');
+
+    const delay = reconnectDelays[Math.min(currentAttempt - 1, reconnectDelays.length - 1)];
+
+    setTimeout(() => {
+      if (hlsRef.current) {
+        hlsRef.current.startLoad();
+        setIsReconnecting(false);
+      }
+    }, delay);
+  }, []);
+
+  const handleMediaError = useCallback(() => {
+    mediaErrorRetryCountRef.current += 1;
+    const count = mediaErrorRetryCountRef.current;
+
+    if (!hlsRef.current) return;
+
+    if (count === 1) {
+      console.warn('Recovering from first media error...');
+      setGranularStatus('Recovering playback...');
+      hlsRef.current.recoverMediaError();
+    } else if (count === 2) {
+      console.warn('Recovering from second media error by swapping audio codec...');
+      setGranularStatus('Recovering playback...');
+      hlsRef.current.swapAudioCodec();
+      hlsRef.current.recoverMediaError();
+    } else {
+      console.error('Fatal media error count exceeded. Resetting HLS engine...');
+      setErrorCode('UNSUPPORTED_CODEC');
+      setErrorDetails('Fatal media decoding error. Stream format could not be recovered.');
+    }
+  }, []);
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
@@ -84,15 +140,20 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
     setErrorDetails(null);
     setIsBuffering(true);
     setGranularStatus('Loading playlist...');
+    reconnectAttemptRef.current = 0;
+    mediaErrorRetryCountRef.current = 0;
+    setReconnectAttempt(0);
 
     if (hlsRef.current) {
+      hlsRef.current.stopLoad();
+      hlsRef.current.detachMedia();
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
 
     const video = videoRef.current;
 
-    // Synchronize HTML5 video media events with React state
+    // Synchronize HTML5 video media & volume events with React state
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handlePlaying = () => {
@@ -101,11 +162,29 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
       setGranularStatus('Ready');
     };
     const handleWaiting = () => setIsBuffering(true);
+    const handleVolumeChange = () => {
+      if (video) {
+        setIsMuted(video.muted || video.volume === 0);
+        setVolume(video.volume);
+      }
+    };
 
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('playing', handlePlaying);
     video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('volumechange', handleVolumeChange);
+
+    const handleNativeMetadata = () => {
+      setIsBuffering(false);
+      setGranularStatus('Ready');
+      if (autoPlay) {
+        video.play().then(() => setIsPlaying(true)).catch(() => {
+          video.muted = true;
+          video.play().then(() => setIsPlaying(true)).catch(console.error);
+        });
+      }
+    };
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -154,6 +233,7 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
             default: t.default,
           }));
           setAudioTracks(parsedAudio);
+          setCurrentAudioTrack(hls.audioTrack !== -1 ? hls.audioTrack : 0);
         }
 
         if (hls.subtitleTracks && hls.subtitleTracks.length > 0) {
@@ -164,6 +244,7 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
             default: t.default,
           }));
           setSubtitleTracks(parsedSubs);
+          setCurrentSubtitleTrack(hls.subtitleTrack);
         }
 
         if (autoPlay) {
@@ -186,6 +267,14 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
               });
           }
         }
+      });
+
+      hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => {
+        setCurrentAudioTrack(data.id);
+      });
+
+      hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => {
+        setCurrentSubtitleTrack(data.id);
       });
 
       hls.on(Hls.Events.FRAG_LOADING, () => {
@@ -246,8 +335,7 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
               handleNetworkError();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              setGranularStatus('Recovering playback...');
-              hls.recoverMediaError();
+              handleMediaError();
               break;
             default:
               setErrorCode('NETWORK_ERROR');
@@ -259,16 +347,7 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
 
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = activeUrl;
-      video.addEventListener('loadedmetadata', () => {
-        setIsBuffering(false);
-        setGranularStatus('Ready');
-        if (autoPlay) {
-          video.play().then(() => setIsPlaying(true)).catch(() => {
-            video.muted = true;
-            video.play().then(() => setIsPlaying(true)).catch(console.error);
-          });
-        }
-      });
+      video.addEventListener('loadedmetadata', handleNativeMetadata);
     } else {
       setErrorCode('UNSUPPORTED_CODEC');
       setErrorDetails('Your browser does not support native HLS playback.');
@@ -279,13 +358,20 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
       video.removeEventListener('pause', handlePause);
       video.removeEventListener('playing', handlePlaying);
       video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('volumechange', handleVolumeChange);
+      video.removeEventListener('loadedmetadata', handleNativeMetadata);
 
       if (hlsRef.current) {
+        hlsRef.current.stopLoad();
+        hlsRef.current.detachMedia();
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
+
+      video.removeAttribute('src');
+      video.load();
     };
-  }, [streamUrl, useProxy]);
+  }, [streamUrl, useProxy, activeUrl, autoPlay, handleNetworkError, handleMediaError]);
 
   // Buffer gap jumping and telemetry monitoring interval
   useEffect(() => {
@@ -331,10 +417,17 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
         total = quality.totalVideoFrames || 0;
       }
 
-      // Live latency estimation
+      // Live latency estimation & seekable range calculation
       let liveDelaySec = 0;
       if (hlsRef.current && hlsRef.current.liveSyncPosition) {
         liveDelaySec = Math.max(0, hlsRef.current.liveSyncPosition - video.currentTime);
+      }
+
+      let seekStart = 0;
+      let seekEnd = video.duration || 0;
+      if (video.seekable && video.seekable.length > 0) {
+        seekStart = video.seekable.start(0);
+        seekEnd = video.seekable.end(video.seekable.length - 1);
       }
 
       let currentStatus: StreamHealth['status'] = 'healthy';
@@ -352,9 +445,9 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
         status: isReconnecting ? 'reconnecting' : currentStatus,
         delayMs: Math.round(liveDelaySec * 1000),
         bufferLength: currentBuffer,
-        errorCount: reconnectAttempt,
+        errorCount: reconnectAttemptRef.current,
         lastCheckTime: Date.now(),
-        message: isReconnecting ? `Reconnecting (${reconnectAttempt}/${maxRetries})...` : 'Stream connected',
+        message: isReconnecting ? `Reconnecting (${reconnectAttemptRef.current}/${maxRetries})...` : 'Stream connected',
       });
 
       setMetrics((prev) => ({
@@ -364,34 +457,15 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
         totalFrames: total,
         fps: 60,
         liveDelay: liveDelaySec,
+        currentTime: video.currentTime || 0,
+        duration: isNaN(video.duration) ? 0 : video.duration,
+        seekableStart: seekStart,
+        seekableEnd: seekEnd,
       }));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, isBuffering, isReconnecting, reconnectAttempt, errorCode]);
-
-  const handleNetworkError = () => {
-    if (reconnectAttempt >= maxRetries) {
-      setErrorCode('NETWORK_ERROR');
-      setErrorDetails('Stream connection lost. Max reconnect retries reached.');
-      setIsReconnecting(false);
-      return;
-    }
-
-    const nextAttempt = reconnectAttempt + 1;
-    setReconnectAttempt(nextAttempt);
-    setIsReconnecting(true);
-    setGranularStatus(`Retrying...`);
-
-    const delay = reconnectDelays[Math.min(nextAttempt - 1, reconnectDelays.length - 1)];
-
-    setTimeout(() => {
-      if (hlsRef.current) {
-        hlsRef.current.startLoad();
-        setIsReconnecting(false);
-      }
-    }, delay);
-  };
+  }, [isPlaying, isBuffering, isReconnecting, errorCode]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -434,6 +508,11 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
     videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime + seconds);
   };
 
+  const seekTo = (time: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = time;
+  };
+
   const selectQuality = (levelIndex: number) => {
     if (!hlsRef.current) return;
     hlsRef.current.currentLevel = levelIndex;
@@ -449,12 +528,16 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
   const selectSubtitleTrack = (trackId: number) => {
     if (!hlsRef.current) return;
     hlsRef.current.subtitleTrack = trackId;
+    if (trackId !== -1) {
+      hlsRef.current.subtitleDisplay = true;
+    }
     setCurrentSubtitleTrack(trackId);
   };
 
   const retryStream = () => {
     setErrorCode(null);
     setErrorDetails(null);
+    reconnectAttemptRef.current = 0;
     setReconnectAttempt(0);
     if (hlsRef.current) {
       hlsRef.current.loadSource(activeUrl);
@@ -476,11 +559,14 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
     currentAudioTrack,
     subtitleTracks,
     currentSubtitleTrack,
+    isMuted,
+    volume,
     reconnectAttempt,
     maxRetries,
     togglePlay,
     jumpToLive,
     seekBy,
+    seekTo,
     selectQuality,
     selectAudioTrack,
     selectSubtitleTrack,

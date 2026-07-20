@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { StreamHistoryItem } from '@/types/stream';
 
 const STORAGE_KEY = 'live_hls_history_v1';
@@ -12,19 +12,23 @@ export function useStreamHistory() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setHistory(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        }
       }
     } catch (err) {
       console.warn('Failed to read history from localStorage', err);
     }
   }, []);
 
-  const saveToHistory = (url: string, title?: string, resolution?: string) => {
+  const saveToHistory = useCallback((url: string, title?: string, resolution?: string) => {
     if (!url) return;
 
     setHistory((prev) => {
-      const existingIdx = prev.findIndex((item) => item.url === url);
-      const isFav = existingIdx !== -1 ? prev[existingIdx].isFavorite : false;
+      const safePrev = Array.isArray(prev) ? prev : [];
+      const existingIdx = safePrev.findIndex((item) => item.url === url);
+      const isFav = existingIdx !== -1 ? safePrev[existingIdx].isFavorite : false;
 
       const newItem: StreamHistoryItem = {
         id: `stream-${Date.now()}`,
@@ -35,8 +39,8 @@ export function useStreamHistory() {
         isFavorite: isFav,
       };
 
-      const filtered = prev.filter((item) => item.url !== url);
-      const updated = [newItem, ...filtered].slice(0, 50); // Keep top 50 recent streams
+      const filtered = safePrev.filter((item) => item.url !== url);
+      const updated = [newItem, ...filtered].slice(0, 50);
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -46,11 +50,12 @@ export function useStreamHistory() {
 
       return updated;
     });
-  };
+  }, []);
 
-  const toggleFavorite = (url: string) => {
+  const toggleFavorite = useCallback((url: string) => {
     setHistory((prev) => {
-      const updated = prev.map((item) =>
+      const safePrev = Array.isArray(prev) ? prev : [];
+      const updated = safePrev.map((item) =>
         item.url === url ? { ...item, isFavorite: !item.isFavorite } : item
       );
 
@@ -62,16 +67,16 @@ export function useStreamHistory() {
 
       return updated;
     });
-  };
+  }, []);
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     setHistory([]);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (err) {
       console.warn('Failed to clear history from localStorage', err);
     }
-  };
+  }, []);
 
   return {
     history,

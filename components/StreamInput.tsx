@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, AlertCircle, CheckCircle2, Clipboard, Loader2, PlaySquare } from 'lucide-react';
+import { Play, AlertCircle, CheckCircle2, Clipboard, Loader2, PlaySquare, Tv } from 'lucide-react';
 import { StreamValidationResult } from '@/types/stream';
 
 interface StreamInputProps {
@@ -10,9 +10,12 @@ interface StreamInputProps {
   useProxy: boolean;
   setUseProxy: (val: boolean) => void;
   isLoading: boolean;
+  onLoadIptvPlaylist?: (url: string) => void;
+  isIptvActive?: boolean;
+  onOpenIptvGuide?: () => void;
 }
 
-const VERIFIED_SAMPLE_STREAMS = [
+const FEATURED_SAMPLE_STREAMS = [
   {
     name: 'Apple Advanced 4K UHD',
     url: 'https://devstreaming-cdn.apple.com/videos/streaming/examples/adv_dv_atmos/main.m3u8',
@@ -25,6 +28,48 @@ const VERIFIED_SAMPLE_STREAMS = [
     requiresProxy: false,
     tag: '1080p HD',
   },
+  {
+    name: 'All Channels (12,000+)',
+    url: 'https://iptv-org.github.io/iptv/index.m3u',
+    requiresProxy: true,
+    tag: '12,000+ Ch',
+    isIptv: true,
+  },
+  {
+    name: 'Sports (320+ Channels)',
+    url: 'https://iptv-org.github.io/iptv/categories/sports.m3u',
+    requiresProxy: true,
+    tag: '320 Sports',
+    isIptv: true,
+  },
+  {
+    name: 'News (930+ Channels)',
+    url: 'https://iptv-org.github.io/iptv/categories/news.m3u',
+    requiresProxy: true,
+    tag: '930 News',
+    isIptv: true,
+  },
+  {
+    name: 'Movies (350+ Channels)',
+    url: 'https://iptv-org.github.io/iptv/categories/movies.m3u',
+    requiresProxy: true,
+    tag: '350 Cinema',
+    isIptv: true,
+  },
+  {
+    name: 'Music (650+ Channels)',
+    url: 'https://iptv-org.github.io/iptv/categories/music.m3u',
+    requiresProxy: true,
+    tag: '650 Music',
+    isIptv: true,
+  },
+  {
+    name: 'By Country Index',
+    url: 'https://iptv-org.github.io/iptv/index.country.m3u',
+    requiresProxy: true,
+    tag: 'By Country',
+    isIptv: true,
+  },
 ];
 
 export const StreamInput: React.FC<StreamInputProps> = ({
@@ -33,6 +78,9 @@ export const StreamInput: React.FC<StreamInputProps> = ({
   useProxy,
   setUseProxy,
   isLoading,
+  onLoadIptvPlaylist,
+  isIptvActive,
+  onOpenIptvGuide,
 }) => {
   const [urlInput, setUrlInput] = useState(currentUrl || '');
   const [validation, setValidation] = useState<StreamValidationResult | null>(null);
@@ -42,6 +90,14 @@ export const StreamInput: React.FC<StreamInputProps> = ({
   const handleValidateAndPlay = async (urlToPlay: string) => {
     const trimmed = urlToPlay.trim();
     if (!trimmed) return;
+
+    // Detect if input is an IPTV M3U Playlist file
+    if (trimmed.endsWith('.m3u') || trimmed.includes('/categories/') || trimmed.includes('/iptv/')) {
+      if (onLoadIptvPlaylist) {
+        onLoadIptvPlaylist(trimmed);
+        return;
+      }
+    }
 
     if (trimmed.startsWith('http://') && !useProxy) {
       setUseProxy(true);
@@ -85,11 +141,22 @@ export const StreamInput: React.FC<StreamInputProps> = ({
   };
 
   return (
-    <div className="broadcast-card p-5 mb-6">
+    <div className="broadcast-card p-5 mb-6 bg-[#141416] border border-white/10 rounded-[14px]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-        <h2 className="text-sm font-semibold text-white">Stream URL</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-white">Stream URL or IPTV Playlist</h2>
+          {isIptvActive && (
+            <button
+              onClick={onOpenIptvGuide}
+              className="px-2 py-0.5 rounded bg-red-600/20 text-red-400 border border-red-500/30 text-[11px] font-mono font-bold flex items-center gap-1.5 hover:bg-red-600/30 transition-colors"
+            >
+              <Tv className="w-3 h-3" />
+              <span>IPTV Channel Guide</span>
+            </button>
+          )}
+        </div>
         <span className="text-xs text-[#7A7A7D]">
-          Paste any HTTP/HTTPS live HLS (<code className="text-[#B6B6B8]">.m3u8</code>) stream link
+          Supports HLS (<code className="text-[#B6B6B8]">.m3u8</code>) streams & IPTV (<code className="text-[#B6B6B8]">.m3u</code>) playlists
         </span>
       </div>
 
@@ -109,13 +176,13 @@ export const StreamInput: React.FC<StreamInputProps> = ({
               setUrlInput(e.target.value);
               setErrorMsg(null);
             }}
-            placeholder="http://domain/live/index.m3u8 or https://domain/live.m3u8"
-            className="w-full bg-[#141414] border border-[#2A2A2D] focus:border-white rounded-[10px] px-3.5 py-2.5 text-xs text-white placeholder-[#555558] font-mono pr-20"
+            placeholder="http://domain/live/index.m3u8 or https://iptv-org.github.io/iptv/categories/sports.m3u"
+            className="w-full bg-[#09090B] border border-white/10 focus:border-white rounded-[10px] px-3.5 py-2.5 text-xs text-white placeholder-[#555558] font-mono pr-20"
           />
           <button
             type="button"
             onClick={handlePaste}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-[#1B1B1D] hover:bg-[#222326] text-[#B6B6B8] text-[11px] font-semibold rounded-[6px] border border-[#2A2A2D] flex items-center gap-1 transition-all"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-[#1B1B1D] hover:bg-[#222326] text-[#B6B6B8] text-[11px] font-semibold rounded-[6px] border border-white/10 flex items-center gap-1 transition-all"
             title="Paste from clipboard"
           >
             <Clipboard className="w-3 h-3" />
@@ -131,7 +198,7 @@ export const StreamInput: React.FC<StreamInputProps> = ({
           {validating || isLoading ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
-              <span>Validating...</span>
+              <span>Loading...</span>
             </>
           ) : (
             <>
@@ -160,48 +227,54 @@ export const StreamInput: React.FC<StreamInputProps> = ({
 
       {/* Validation Metadata Pill */}
       {validation && validation.valid && (
-        <div className="mb-4 p-2.5 bg-[#141414] border border-[#2A2A2D] rounded-[10px] text-xs flex flex-wrap items-center justify-between gap-2">
+        <div className="mb-4 p-2.5 bg-[#09090B] border border-white/10 rounded-[10px] text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-[#22C55E]">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span className="font-semibold">Stream Validated</span>
           </div>
           <div className="flex items-center gap-3 font-mono text-[11px] text-[#B6B6B8]">
             {validation.resolution && (
-              <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-[#2A2A2D]">
+              <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-white/10">
                 {validation.resolution}
               </span>
             )}
             {validation.codecs && (
-              <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-[#2A2A2D]">
+              <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-white/10">
                 {validation.codecs}
               </span>
             )}
-            <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-[#2A2A2D]">
+            <span className="bg-[#1B1B1D] px-2 py-0.5 rounded border border-white/10">
               {validation.isMaster ? `${validation.variants.length} Variants` : 'Single Stream'}
             </span>
           </div>
         </div>
       )}
 
-      {/* Sample Channels Row */}
+      {/* Sample Channels Grid */}
       <div>
-        <div className="flex items-center gap-1.5 mb-2">
-          <PlaySquare className="w-3.5 h-3.5 text-neutral-400" />
-          <span className="text-[11px] font-semibold text-[#7A7A7D] uppercase tracking-wider block">
-            Featured Sample Streams
-          </span>
+        <div className="flex items-center justify-between gap-1.5 mb-2">
+          <div className="flex items-center gap-1.5">
+            <PlaySquare className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="text-[11px] font-semibold text-[#7A7A7D] uppercase tracking-wider block">
+              Curated IPTV Categories & Sample Streams
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {VERIFIED_SAMPLE_STREAMS.map((preset, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {FEATURED_SAMPLE_STREAMS.map((preset, idx) => (
             <button
               key={idx}
               onClick={() => {
                 setUrlInput(preset.url);
                 if (preset.requiresProxy) setUseProxy(true);
-                handleValidateAndPlay(preset.url);
+                if (preset.isIptv && onLoadIptvPlaylist) {
+                  onLoadIptvPlaylist(preset.url);
+                } else {
+                  handleValidateAndPlay(preset.url);
+                }
               }}
-              className="p-2.5 bg-[#141414] hover:bg-[#222326] border border-[#2A2A2D] rounded-[10px] text-left transition-all group flex items-center justify-between gap-2"
+              className="p-2.5 bg-[#09090B] hover:bg-[#222326] border border-white/10 rounded-[10px] text-left transition-all group flex items-center justify-between gap-2"
             >
               <div className="min-w-0">
                 <span className="text-xs font-semibold text-white group-hover:text-neutral-300 transition-colors truncate block">
@@ -211,7 +284,11 @@ export const StreamInput: React.FC<StreamInputProps> = ({
                   {preset.url}
                 </span>
               </div>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#1B1B1D] text-[#B6B6B8] border border-[#2A2A2D] shrink-0">
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${
+                preset.isIptv
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20 font-bold'
+                  : 'bg-[#1B1B1D] text-[#B6B6B8] border-white/10'
+              }`}>
                 {preset.tag}
               </span>
             </button>
