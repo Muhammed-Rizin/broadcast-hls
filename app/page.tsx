@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { StreamInput } from '@/components/StreamInput';
@@ -47,6 +47,32 @@ function MainAppContent() {
     message: 'Stream ready',
   });
 
+  const handlePlayStream = useCallback((url: string, validationResult?: StreamValidationResult) => {
+    setCurrentUrl(url);
+    if (validationResult) {
+      setValidation(validationResult);
+    }
+    setActiveTab('player');
+
+    saveToHistory(url, url === DEFAULT_SAMPLE_URL ? 'TSN 4 Live Channel' : undefined, validationResult?.resolution || '1080p');
+  }, [saveToHistory]);
+
+  const validateDefaultStream = useCallback(async () => {
+    try {
+      const res = await fetch('/api/stream/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: DEFAULT_SAMPLE_URL }),
+      });
+      const data: StreamValidationResult = await res.json();
+      if (data.valid) {
+        setValidation(data);
+      }
+    } catch (err) {
+      console.warn('Initial validation probe completed', err);
+    }
+  }, []);
+
   // Handle direct share link query parameters (?url=...&proxy=true)
   useEffect(() => {
     const urlParam = searchParams.get('url');
@@ -66,33 +92,7 @@ function MainAppContent() {
     } else {
       validateDefaultStream();
     }
-  }, [searchParams]);
-
-  const validateDefaultStream = async () => {
-    try {
-      const res = await fetch('/api/stream/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: DEFAULT_SAMPLE_URL }),
-      });
-      const data: StreamValidationResult = await res.json();
-      if (data.valid) {
-        setValidation(data);
-      }
-    } catch (err) {
-      console.warn('Initial validation probe completed', err);
-    }
-  };
-
-  const handlePlayStream = (url: string, validationResult?: StreamValidationResult) => {
-    setCurrentUrl(url);
-    if (validationResult) {
-      setValidation(validationResult);
-    }
-    setActiveTab('player');
-
-    saveToHistory(url, url === DEFAULT_SAMPLE_URL ? 'TSN 4 Live Channel' : undefined, validationResult?.resolution || '1080p');
-  };
+  }, [searchParams, handlePlayStream, validateDefaultStream]);
 
   return (
     <div className="min-h-screen pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

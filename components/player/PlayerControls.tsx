@@ -171,6 +171,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
               onSelectQuality={onSelectQuality}
               audioTracks={audioTracks}
               currentAudioTrack={currentAudioTrack}
+              onSelectAudioTrack={onSelectAudioTrack}
               onSelectSubtitleTrack={onSelectSubtitleTrack}
               subtitleTracks={subtitleTracks}
               currentSubtitleTrack={currentSubtitleTrack}

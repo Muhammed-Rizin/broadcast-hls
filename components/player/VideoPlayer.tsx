@@ -73,7 +73,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     if (onMetricsUpdate) onMetricsUpdate(metrics);
     if (onHealthUpdate) onHealthUpdate(health);
-  }, [metrics, health]);
+  }, [metrics, health, onMetricsUpdate, onHealthUpdate]);
 
   // Handle inactivity auto-hide controls timer
   const handleUserInteraction = () => {
