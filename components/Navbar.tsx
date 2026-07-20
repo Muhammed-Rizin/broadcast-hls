@@ -1,11 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { PlayCircle, Grid, History, Settings, ShieldCheck, ShieldAlert, Tv, Menu, X } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  PlayCircle,
+  Grid,
+  History,
+  Settings,
+  ShieldCheck,
+  ShieldAlert,
+  Tv,
+  Menu,
+  X,
+} from "lucide-react";
 
 interface NavbarProps {
-  activeTab: 'player' | 'iptv' | 'multiview' | 'history' | 'settings';
-  setActiveTab: (tab: 'player' | 'iptv' | 'multiview' | 'history' | 'settings') => void;
+  activeTab: "player" | "iptv" | "multiview" | "history" | "settings";
+  setActiveTab: (tab: "player" | "iptv" | "multiview" | "history" | "settings") => void;
   useProxy: boolean;
   setUseProxy: (val: boolean) => void;
   activeStreamCount?: number;
@@ -20,20 +30,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleTabClick = (tab: 'player' | 'iptv' | 'multiview' | 'history' | 'settings') => {
+  const handleTabClick = (tab: "player" | "iptv" | "multiview" | "history" | "settings") => {
     setActiveTab(tab);
     setMobileMenuOpen(false);
   };
 
   return (
-    <header className="w-full bg-[#141414] border-b border-[#2A2A2D] px-4 sm:px-6 py-3 sticky top-0 z-50 mb-6">
-      <div className="flex items-center justify-between gap-3">
+    <header className="w-full bg-[#141414] border-b border-[#2A2A2D] px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-50 mb-4 sm:mb-6 rounded-b-xl sm:rounded-none">
+      <div className="flex items-center justify-between gap-2.5">
         {/* Brand Title */}
         <div
           className="cursor-pointer select-none flex items-center gap-2"
-          onClick={() => handleTabClick('player')}
+          onClick={() => handleTabClick("player")}
         >
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
+          <h1 className="text-base sm:text-xl font-bold tracking-tight text-white font-sans">
             Live HLS
           </h1>
         </div>
@@ -41,11 +51,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Desktop Navigation Tabs */}
         <nav className="hidden md:flex items-center p-1 bg-[#0B0B0C] border border-[#2A2A2D] rounded-[10px]">
           <button
-            onClick={() => handleTabClick('player')}
+            onClick={() => handleTabClick("player")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === 'player'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]'
+              activeTab === "player"
+                ? "bg-white text-black shadow-sm"
+                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
             }`}
           >
             <PlayCircle className="w-3.5 h-3.5" />
@@ -53,11 +63,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('iptv')}
+            onClick={() => handleTabClick("iptv")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === 'iptv'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]'
+              activeTab === "iptv"
+                ? "bg-white text-black shadow-sm"
+                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
             }`}
           >
             <Tv className="w-3.5 h-3.5 text-red-500" />
@@ -65,11 +75,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('multiview')}
+            onClick={() => handleTabClick("multiview")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === 'multiview'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]'
+              activeTab === "multiview"
+                ? "bg-white text-black shadow-sm"
+                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
             }`}
           >
             <Grid className="w-3.5 h-3.5" />
@@ -82,11 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('history')}
+            onClick={() => handleTabClick("history")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === 'history'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]'
+              activeTab === "history"
+                ? "bg-white text-black shadow-sm"
+                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
             }`}
           >
             <History className="w-3.5 h-3.5" />
@@ -94,11 +104,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('settings')}
+            onClick={() => handleTabClick("settings")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === 'settings'
-                ? 'bg-white text-black shadow-sm'
-                : 'text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]'
+              activeTab === "settings"
+                ? "bg-white text-black shadow-sm"
+                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
             }`}
           >
             <Settings className="w-3.5 h-3.5" />
@@ -107,13 +117,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right Action Bar: Proxy Toggle Pill & Mobile Menu Toggle */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             onClick={() => setUseProxy(!useProxy)}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-[10px] text-[11px] sm:text-xs font-semibold border transition-all ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[8px] sm:rounded-[10px] text-[11px] sm:text-xs font-semibold border transition-all ${
               useProxy
-                ? 'bg-[#222326] border-[#2A2A2D] text-white'
-                : 'bg-[#141414] border-[#2A2A2D] text-[#7A7A7D] hover:text-white'
+                ? "bg-[#222326] border-[#2A2A2D] text-white"
+                : "bg-[#141414] border-[#2A2A2D] text-[#7A7A7D] hover:text-white"
             }`}
             title="Toggle Backend Proxy mode to bypass CORS & Mixed-Content HTTP/HTTPS restrictions"
           >
@@ -135,23 +145,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Hamburger Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-[#1B1B1D] hover:bg-[#27272A] text-white border border-white/10 transition-colors"
+            className="md:hidden p-1.5 sm:p-2 rounded-lg bg-[#1B1B1D] hover:bg-[#27272A] text-white border border-white/10 transition-colors"
             aria-label="Toggle Navigation Menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? (
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+            ) : (
+              <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Mobile Expandable Navigation Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-3 mt-3 border-t border-white/10 flex flex-col gap-1.5 animate-fadeIn">
+        <div className="md:hidden pt-2.5 mt-2.5 border-t border-white/10 flex flex-col gap-1 animate-fadeIn">
           <button
-            onClick={() => handleTabClick('player')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'player'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-[#1B1B1D] text-[#D4D4D8] hover:text-white'
+            onClick={() => handleTabClick("player")}
+            className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "player"
+                ? "bg-white text-black shadow-md"
+                : "bg-[#1B1B1D] text-[#D4D4D8] hover:text-white"
             }`}
           >
             <PlayCircle className="w-4 h-4" />
@@ -159,11 +173,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('iptv')}
-            className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'iptv'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-[#1B1B1D] text-[#D4D4D8] hover:text-white'
+            onClick={() => handleTabClick("iptv")}
+            className={`flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "iptv"
+                ? "bg-white text-black shadow-md"
+                : "bg-[#1B1B1D] text-[#D4D4D8] hover:text-white"
             }`}
           >
             <div className="flex items-center gap-3">
@@ -176,11 +190,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('multiview')}
-            className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'multiview'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-[#1B1B1D] text-[#D4D4D8] hover:text-white'
+            onClick={() => handleTabClick("multiview")}
+            className={`flex items-center justify-between px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "multiview"
+                ? "bg-white text-black shadow-md"
+                : "bg-[#1B1B1D] text-[#D4D4D8] hover:text-white"
             }`}
           >
             <div className="flex items-center gap-3">
@@ -195,11 +209,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('history')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'history'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-[#1B1B1D] text-[#D4D4D8] hover:text-white'
+            onClick={() => handleTabClick("history")}
+            className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "history"
+                ? "bg-white text-black shadow-md"
+                : "bg-[#1B1B1D] text-[#D4D4D8] hover:text-white"
             }`}
           >
             <History className="w-4 h-4" />
@@ -207,11 +221,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
-            onClick={() => handleTabClick('settings')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'settings'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-[#1B1B1D] text-[#D4D4D8] hover:text-white'
+            onClick={() => handleTabClick("settings")}
+            className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "settings"
+                ? "bg-white text-black shadow-md"
+                : "bg-[#1B1B1D] text-[#D4D4D8] hover:text-white"
             }`}
           >
             <Settings className="w-4 h-4" />

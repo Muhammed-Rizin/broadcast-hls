@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 /* eslint-disable @next/next/no-img-element */
-import React, { useState } from 'react';
-import { Tv, Search, X, Play, ShieldAlert, Star } from 'lucide-react';
-import { IptvChannel, IptvPlaylist } from '@/utils/m3uParser';
-import { useIptvStore } from '@/hooks/useIptvStore';
+import React, { useState } from "react";
+import { Tv, Search, X, Play, ShieldAlert, Star } from "lucide-react";
+import { IptvChannel, IptvPlaylist } from "@/utils/m3uParser";
+import { useIptvStore } from "@/hooks/useIptvStore";
 
 interface IptvChannelGuideProps {
   isOpen: boolean;
@@ -22,8 +22,8 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
   onSelectChannel,
 }) => {
   const { toggleFavorite, isFavorite } = useIptvStore();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(60);
 
   if (!isOpen || !playlist) return null;
@@ -34,7 +34,7 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
       (channel.group && channel.group.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory =
-      selectedCategory === 'all' ||
+      selectedCategory === "all" ||
       (channel.group && channel.group.toLowerCase().includes(selectedCategory.toLowerCase()));
 
     return matchesSearch && matchesCategory;
@@ -72,19 +72,19 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
         {/* Search & Category Filter Bar */}
         <div className="p-3 border-b border-white/10 space-y-2.5 bg-[#18181B]">
           {/* Search Input */}
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#71717A]" />
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] pointer-events-none" />
             <input
               type="text"
               placeholder="Search channel or group..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-1.5 text-xs bg-[#09090B] border border-white/10 rounded-lg text-white placeholder-[#71717A] focus:outline-none focus:border-red-500 transition-colors font-sans"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-[#09090B] border border-white/10 rounded-lg text-white placeholder-[#71717A] focus:outline-none focus:border-red-500 transition-colors font-sans"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-2 text-[#71717A] hover:text-white"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-white flex items-center justify-center"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -95,11 +95,11 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
           {playlist.categories.length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
-                onClick={() => setSelectedCategory('all')}
+                onClick={() => setSelectedCategory("all")}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-mono whitespace-nowrap transition-colors ${
-                  selectedCategory === 'all'
-                    ? 'bg-white text-black font-bold'
-                    : 'bg-white/5 text-[#A1A1AA] hover:bg-white/10 hover:text-white'
+                  selectedCategory === "all"
+                    ? "bg-white text-black font-bold"
+                    : "bg-white/5 text-[#A1A1AA] hover:bg-white/10 hover:text-white"
                 }`}
               >
                 All ({playlist.channels.length})
@@ -110,8 +110,8 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-mono whitespace-nowrap transition-colors ${
                     selectedCategory === cat
-                      ? 'bg-white text-black font-bold'
-                      : 'bg-white/5 text-[#A1A1AA] hover:bg-white/10 hover:text-white'
+                      ? "bg-white text-black font-bold"
+                      : "bg-white/5 text-[#A1A1AA] hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {cat}
@@ -138,8 +138,8 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
                     key={channel.id}
                     className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left group ${
                       isActive
-                        ? 'bg-red-600/15 border-red-500/50 text-white shadow-md'
-                        : 'bg-[#18181B]/60 hover:bg-[#27272A] border-white/5 text-[#D4D4D8]'
+                        ? "bg-red-600/15 border-red-500/50 text-white shadow-md"
+                        : "bg-[#18181B]/60 hover:bg-[#27272A] border-white/5 text-[#D4D4D8]"
                     }`}
                   >
                     <div
@@ -156,7 +156,7 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
                           alt={channel.name}
                           className="w-7 h-7 object-contain rounded bg-black/40 p-0.5 flex-shrink-0 border border-white/10"
                           onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
+                            (e.target as HTMLElement).style.display = "none";
                           }}
                         />
                       ) : (
@@ -181,11 +181,11 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
                       <button
                         onClick={() => toggleFavorite(channel)}
                         className={`p-1 rounded transition-colors ${
-                          fav ? 'text-yellow-400' : 'text-[#555558] hover:text-white'
+                          fav ? "text-yellow-400" : "text-[#555558] hover:text-white"
                         }`}
-                        title={fav ? 'Remove from Favorites' : 'Add to Favorites'}
+                        title={fav ? "Remove from Favorites" : "Add to Favorites"}
                       >
-                        <Star className={`w-3.5 h-3.5 ${fav ? 'fill-current' : ''}`} />
+                        <Star className={`w-3.5 h-3.5 ${fav ? "fill-current" : ""}`} />
                       </button>
 
                       {isActive ? (

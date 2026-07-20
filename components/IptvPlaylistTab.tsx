@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 /* eslint-disable @next/next/no-img-element */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   Tv,
   Search,
@@ -19,74 +19,74 @@ import {
   Trophy,
   Music,
   Languages,
-} from 'lucide-react';
-import { IptvChannel } from '@/utils/m3uParser';
-import { useIptvStore } from '@/hooks/useIptvStore';
+} from "lucide-react";
+import { IptvChannel } from "@/utils/m3uParser";
+import { useIptvStore } from "@/hooks/useIptvStore";
 
 export const FEATURED_IPTV_PRESETS = [
   {
-    name: 'All Channels (12,000+)',
-    url: 'https://iptv-org.github.io/iptv/index.m3u',
-    description: 'Complete global IPTV channel index',
-    tag: '12,000+ Ch',
+    name: "All Channels (12,000+)",
+    url: "https://iptv-org.github.io/iptv/index.m3u",
+    description: "Complete global IPTV channel index",
+    tag: "12,000+ Ch",
     icon: Globe,
-    color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
+    color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
   },
   {
-    name: 'Grouped by Category',
-    url: 'https://iptv-org.github.io/iptv/index.category.m3u',
-    description: 'Channels grouped into News, Sports, Movies, etc.',
-    tag: 'Categories',
+    name: "Grouped by Category",
+    url: "https://iptv-org.github.io/iptv/index.category.m3u",
+    description: "Channels grouped into News, Sports, Movies, etc.",
+    tag: "Categories",
     icon: ListFilter,
-    color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+    color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
   },
   {
-    name: 'News Channels (930+)',
-    url: 'https://iptv-org.github.io/iptv/categories/news.m3u',
-    description: 'Global 24/7 live news broadcasts',
-    tag: '930 Ch',
+    name: "News Channels (930+)",
+    url: "https://iptv-org.github.io/iptv/categories/news.m3u",
+    description: "Global 24/7 live news broadcasts",
+    tag: "930 Ch",
     icon: Newspaper,
-    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+    color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
   },
   {
-    name: 'Sports Channels (320+)',
-    url: 'https://iptv-org.github.io/iptv/categories/sports.m3u',
-    description: 'Live sports, football, racing & athletics',
-    tag: '320 Ch',
+    name: "Sports Channels (320+)",
+    url: "https://iptv-org.github.io/iptv/categories/sports.m3u",
+    description: "Live sports, football, racing & athletics",
+    tag: "320 Ch",
     icon: Trophy,
-    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+    color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
   },
   {
-    name: 'Movies & Cinema (350+)',
-    url: 'https://iptv-org.github.io/iptv/categories/movies.m3u',
-    description: 'Live movie channels & cinema streams',
-    tag: '350 Ch',
+    name: "Movies & Cinema (350+)",
+    url: "https://iptv-org.github.io/iptv/categories/movies.m3u",
+    description: "Live movie channels & cinema streams",
+    tag: "350 Ch",
     icon: Film,
-    color: 'text-red-400 bg-red-500/10 border-red-500/20',
+    color: "text-red-400 bg-red-500/10 border-red-500/20",
   },
   {
-    name: 'Music & Hits (650+)',
-    url: 'https://iptv-org.github.io/iptv/categories/music.m3u',
-    description: 'Music video channels & radio broadcasts',
-    tag: '650 Ch',
+    name: "Music & Hits (650+)",
+    url: "https://iptv-org.github.io/iptv/categories/music.m3u",
+    description: "Music video channels & radio broadcasts",
+    tag: "650 Ch",
     icon: Music,
-    color: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
+    color: "text-pink-400 bg-pink-500/10 border-pink-500/20",
   },
   {
-    name: 'Grouped by Country',
-    url: 'https://iptv-org.github.io/iptv/index.country.m3u',
-    description: 'Channels organized by national country folders',
-    tag: 'By Country',
+    name: "Grouped by Country",
+    url: "https://iptv-org.github.io/iptv/index.country.m3u",
+    description: "Channels organized by national country folders",
+    tag: "By Country",
     icon: Globe,
-    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+    color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
   },
   {
-    name: 'Grouped by Language',
-    url: 'https://iptv-org.github.io/iptv/index.language.m3u',
-    description: 'Channels organized by spoken language folders',
-    tag: 'By Language',
+    name: "Grouped by Language",
+    url: "https://iptv-org.github.io/iptv/index.language.m3u",
+    description: "Channels organized by spoken language folders",
+    tag: "By Language",
     icon: Languages,
-    color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
+    color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
   },
 ];
 
@@ -113,10 +113,10 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
     isLoading,
   } = useIptvStore();
 
-  const [inputUrl, setInputUrl] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [inputUrl, setInputUrl] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
 
@@ -127,8 +127,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
     if (!inputUrl.trim()) return;
     const imported = await importPlaylistUrl(inputUrl.trim(), customName.trim() || undefined);
     if (imported) {
-      setInputUrl('');
-      setCustomName('');
+      setInputUrl("");
+      setCustomName("");
     }
   };
 
@@ -136,15 +136,15 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       await importPlaylistFile(file);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const channelsToDisplay = showFavoritesOnly
     ? favorites
     : activePlaylist
-    ? activePlaylist.channels
-    : [];
+      ? activePlaylist.channels
+      : [];
 
   const filteredChannels = channelsToDisplay.filter((ch) => {
     const matchesSearch =
@@ -152,7 +152,7 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
       (ch.group && ch.group.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory =
-      selectedCategory === 'all' ||
+      selectedCategory === "all" ||
       (ch.group && ch.group.toLowerCase().includes(selectedCategory.toLowerCase()));
 
     return matchesSearch && matchesCategory;
@@ -174,7 +174,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                 IPTV Channel Guide & Playlist Manager
               </h2>
               <p className="text-xs text-[#A1A1AA]">
-                Import IPTV playlists (<code className="text-cyan-400">.m3u</code>), search thousands of live channels, and star favorites
+                Import IPTV playlists (<code className="text-cyan-400">.m3u</code>), search
+                thousands of live channels, and star favorites
               </p>
             </div>
           </div>
@@ -200,7 +201,10 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
         </div>
 
         {/* Remote M3U URL Form */}
-        <form onSubmit={handleUrlSubmit} className="flex flex-col sm:flex-row items-center gap-2 mb-6">
+        <form
+          onSubmit={handleUrlSubmit}
+          className="flex flex-col sm:flex-row items-center gap-2 mb-6"
+        >
           <input
             type="text"
             placeholder="Enter remote M3U URL (e.g. https://iptv-org.github.io/iptv/categories/sports.m3u)"
@@ -248,13 +252,13 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                         {preset.name}
                       </span>
                     </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border shrink-0 font-bold ${preset.color}`}>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded border shrink-0 font-bold ${preset.color}`}
+                    >
                       {preset.tag}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#A1A1AA] line-clamp-1">
-                    {preset.description}
-                  </p>
+                  <p className="text-[11px] text-[#A1A1AA] line-clamp-1">{preset.description}</p>
                 </button>
               );
             })}
@@ -270,13 +274,13 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
             onClick={() => setShowFavoritesOnly(false)}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
               !showFavoritesOnly
-                ? 'bg-white text-black font-bold'
-                : 'bg-[#1B1B1D] text-[#A1A1AA] hover:text-white'
+                ? "bg-white text-black font-bold"
+                : "bg-[#1B1B1D] text-[#A1A1AA] hover:text-white"
             }`}
           >
             <ListFilter className="w-3.5 h-3.5" />
             <span>
-              {activePlaylist ? activePlaylist.name : 'No Playlist Selected'}
+              {activePlaylist ? activePlaylist.name : "No Playlist Selected"}
               {activePlaylist && ` (${activePlaylist.channels.length})`}
             </span>
           </button>
@@ -285,8 +289,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
             onClick={() => setShowFavoritesOnly(true)}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${
               showFavoritesOnly
-                ? 'bg-yellow-500 text-black font-bold'
-                : 'bg-[#1B1B1D] text-[#A1A1AA] hover:text-white'
+                ? "bg-yellow-500 text-black font-bold"
+                : "bg-[#1B1B1D] text-[#A1A1AA] hover:text-white"
             }`}
           >
             <Star className="w-3.5 h-3.5 fill-current text-yellow-400" />
@@ -296,7 +300,7 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
           {/* Playlist Dropdown */}
           {playlists.length > 1 && !showFavoritesOnly && (
             <select
-              value={activePlaylistId || ''}
+              value={activePlaylistId || ""}
               onChange={(e) => setActivePlaylistId(e.target.value)}
               className="bg-[#09090B] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
             >
@@ -320,19 +324,19 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
         </div>
 
         {/* Search Bar */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#71717A]" />
+        <div className="relative w-full md:w-72 flex items-center">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A] pointer-events-none" />
           <input
             type="text"
             placeholder="Search channel or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-1.5 text-xs bg-[#09090B] border border-white/10 rounded-lg text-white placeholder-[#71717A] focus:outline-none focus:border-red-500 transition-colors"
+            className="w-full pl-9 pr-8 py-2 text-xs bg-[#09090B] border border-white/10 rounded-lg text-white placeholder-[#71717A] focus:outline-none focus:border-red-500 transition-colors"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-2 text-[#71717A] hover:text-white"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#71717A] hover:text-white flex items-center justify-center"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -344,11 +348,11 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
       {activePlaylist && activePlaylist.categories.length > 0 && !showFavoritesOnly && (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
           <button
-            onClick={() => setSelectedCategory('all')}
+            onClick={() => setSelectedCategory("all")}
             className={`px-3 py-1 rounded-md text-xs font-mono whitespace-nowrap transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-white text-black font-bold'
-                : 'bg-[#18181B] text-[#A1A1AA] hover:bg-[#27272A] hover:text-white'
+              selectedCategory === "all"
+                ? "bg-white text-black font-bold"
+                : "bg-[#18181B] text-[#A1A1AA] hover:bg-[#27272A] hover:text-white"
             }`}
           >
             All Categories ({activePlaylist.channels.length})
@@ -359,8 +363,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1 rounded-md text-xs font-mono whitespace-nowrap transition-colors ${
                 selectedCategory === cat
-                  ? 'bg-white text-black font-bold'
-                  : 'bg-[#18181B] text-[#A1A1AA] hover:bg-[#27272A] hover:text-white'
+                  ? "bg-white text-black font-bold"
+                  : "bg-[#18181B] text-[#A1A1AA] hover:bg-[#27272A] hover:text-white"
               }`}
             >
               {cat}
@@ -375,7 +379,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
           <Tv className="w-10 h-10 mx-auto opacity-40" />
           <p className="text-sm font-semibold text-white">No channels found</p>
           <p className="text-xs max-w-sm mx-auto">
-            Click any of the curated IPTV playlists above, import an M3U URL, or upload a <code className="text-cyan-400">.m3u</code> file from your computer.
+            Click any of the curated IPTV playlists above, import an M3U URL, or upload a{" "}
+            <code className="text-cyan-400">.m3u</code> file from your computer.
           </p>
         </div>
       ) : (
@@ -389,8 +394,8 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                   key={channel.id}
                   className={`p-3 rounded-xl border transition-all flex items-center justify-between gap-3 group ${
                     isActive
-                      ? 'bg-red-600/15 border-red-500/50 shadow-lg'
-                      : 'bg-[#141416] hover:bg-[#1C1C1E] border-white/10'
+                      ? "bg-red-600/15 border-red-500/50 shadow-lg"
+                      : "bg-[#141416] hover:bg-[#1C1C1E] border-white/10"
                   }`}
                 >
                   <div
@@ -404,7 +409,7 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                         alt={channel.name}
                         className="w-9 h-9 object-contain rounded-lg bg-black/50 p-1 flex-shrink-0 border border-white/10"
                         onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
+                          (e.target as HTMLElement).style.display = "none";
                         }}
                       />
                     ) : (
@@ -419,7 +424,9 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                       </h3>
                       <div className="flex items-center gap-2 text-[10px] font-mono text-[#A1A1AA] truncate">
                         {channel.group && <span className="truncate">{channel.group}</span>}
-                        {channel.country && <span className="px-1 bg-white/10 rounded">{channel.country}</span>}
+                        {channel.country && (
+                          <span className="px-1 bg-white/10 rounded">{channel.country}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -430,20 +437,20 @@ export const IptvPlaylistTab: React.FC<IptvPlaylistTabProps> = ({
                       onClick={() => toggleFavorite(channel)}
                       className={`p-1.5 rounded-lg transition-colors ${
                         fav
-                          ? 'text-yellow-400 hover:text-yellow-300'
-                          : 'text-[#555558] hover:text-white'
+                          ? "text-yellow-400 hover:text-yellow-300"
+                          : "text-[#555558] hover:text-white"
                       }`}
-                      title={fav ? 'Remove from Favorites' : 'Add to Favorites'}
+                      title={fav ? "Remove from Favorites" : "Add to Favorites"}
                     >
-                      <Star className={`w-4 h-4 ${fav ? 'fill-current' : ''}`} />
+                      <Star className={`w-4 h-4 ${fav ? "fill-current" : ""}`} />
                     </button>
 
                     <button
                       onClick={() => onPlayChannel(channel)}
                       className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                         isActive
-                          ? 'bg-red-600 text-white'
-                          : 'bg-white/10 group-hover:bg-white text-white group-hover:text-black'
+                          ? "bg-red-600 text-white"
+                          : "bg-white/10 group-hover:bg-white text-white group-hover:text-black"
                       }`}
                       title="Play Channel"
                     >
