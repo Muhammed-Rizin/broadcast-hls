@@ -113,7 +113,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
 
       {/* Flyout Popover Container */}
       {isOpen && (
-        <div className="absolute bottom-12 right-0 w-72 bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn">
+        <div className="absolute bottom-12 right-0 w-72 max-w-[calc(100vw-1.5rem)] bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn">
           {viewMode === 'main' && (
             <div className="space-y-1">
               <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1">

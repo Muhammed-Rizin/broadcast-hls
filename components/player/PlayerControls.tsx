@@ -81,7 +81,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
   return (
     <div className={`player-controls-overlay ${!isPlaying ? 'show-always' : ''}`}>
       {/* Flush Bottom Controls Container */}
-      <div className="w-full bg-gradient-to-t from-black/95 via-black/70 to-transparent px-4 pb-3 pt-6 rounded-b-[16px] flex flex-col gap-2 pointer-events-auto">
+      <div className="w-full bg-gradient-to-t from-black/95 via-black/75 to-transparent px-2.5 sm:px-4 pb-2.5 sm:pb-3 pt-4 sm:pt-6 rounded-b-[16px] flex flex-col gap-1.5 sm:gap-2 pointer-events-auto">
         {/* Timeline Progress Bar */}
         <ProgressBar
           currentTime={0}
@@ -91,21 +91,21 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
           isLive={true}
         />
 
-        <div className="flex items-center justify-between gap-3 pt-0.5">
+        <div className="flex items-center justify-between gap-1 sm:gap-3 pt-0.5 min-w-0">
           {/* Left Controls: 10s Backward, Play/Pause, 10s Forward, Subtle LIVE dot, Volume */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0">
             <button
               onClick={onSeekBackward10}
               className="p-1.5 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
-              title="Seek 10 seconds backward (J / ←)"
+              title="Seek 10 seconds backward"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
 
             <button
               onClick={onTogglePlay}
-              className="w-8 h-8 rounded-[8px] bg-white hover:bg-neutral-200 text-black flex items-center justify-center transition-all active:scale-95 shadow-md"
-              title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
+              className="w-8 h-8 rounded-[8px] bg-white hover:bg-neutral-200 text-black flex items-center justify-center transition-all active:scale-95 shadow-md flex-shrink-0"
+              title={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black ml-0.5" />}
             </button>
@@ -113,15 +113,15 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             <button
               onClick={onSeekForward10}
               className="p-1.5 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
-              title="Seek 10 seconds forward (L / →)"
+              title="Seek 10 seconds forward"
             >
               <RotateCw className="w-3.5 h-3.5" />
             </button>
 
-            {/* Subtle Live Dot */}
+            {/* Subtle Live Badge */}
             <button
               onClick={onJumpToLive}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-[5px] bg-[#C62828] hover:bg-red-700 text-white text-[11px] font-bold font-mono transition-colors ml-1"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-[5px] bg-[#C62828] hover:bg-red-700 text-white text-[10px] sm:text-[11px] font-bold font-mono transition-colors ml-0.5 sm:ml-1 flex-shrink-0"
               title="Jump to Live edge"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -136,8 +136,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             />
           </div>
 
-          {/* Right Controls: Subtitles CC, Share, Settings Gear, PiP, Fullscreen */}
-          <div className="flex items-center gap-1.5">
+          {/* Right Controls: Subtitles CC, Share, Settings Gear, PiP (Desktop), Fullscreen */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             {/* Quick Subtitle Toggle Button */}
             <button
               onClick={() => {
@@ -147,19 +147,19 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
                   onSelectSubtitleTrack(subtitleTracks[0].id);
                 }
               }}
-              className={`p-2 border rounded-[8px] text-xs font-mono font-semibold transition-all ${
+              className={`p-1.5 sm:p-2 border rounded-[8px] text-xs font-mono font-semibold transition-all ${
                 currentSubtitleTrack !== -1
                   ? 'bg-white text-black border-white shadow-md'
                   : 'bg-[#141414]/90 hover:bg-[#27272A] border-white/10 text-[#B6B6B8] hover:text-white'
               }`}
-              title={currentSubtitleTrack !== -1 ? 'Subtitles On (Click to turn off)' : 'Subtitles Off (Click to turn on)'}
+              title={currentSubtitleTrack !== -1 ? 'Subtitles On' : 'Subtitles Off'}
             >
               <Subtitles className="w-4 h-4" />
             </button>
 
             <button
               onClick={onOpenShareModal}
-              className="p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
               title="Share Direct Watch Link"
             >
               <Share2 className="w-4 h-4" />
@@ -185,7 +185,7 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
 
             <button
               onClick={onTogglePiP}
-              className="p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
+              className="hidden sm:flex p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
               title="Picture-in-Picture"
             >
               <PictureInPicture2 className="w-4 h-4" />
@@ -193,8 +193,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
 
             <button
               onClick={onToggleFullscreen}
-              className="p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
-              title={isFullscreen ? 'Exit Fullscreen (F)' : 'Fullscreen (F)'}
+              className="p-1.5 sm:p-2 bg-[#141414]/90 hover:bg-[#27272A] border border-white/10 rounded-[8px] text-[#B6B6B8] hover:text-white transition-colors"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             </button>
