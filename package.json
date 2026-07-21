@@ -1,6 +1,29 @@
 {
   "name": "broadcast-hls",
   "version": "1.0.0",
+  "description": "High-performance HTTP Live Streaming (HLS .m3u8) and IPTV (.m3u) web broadcast platform with CORS proxying, real-time telemetry, and multi-view grid monitoring.",
+  "author": "Muhammed Rizin <https://github.com/Muhammed-Rizin>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Muhammed-Rizin/broadcast-hls.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Muhammed-Rizin/broadcast-hls/issues"
+  },
+  "homepage": "https://github.com/Muhammed-Rizin/broadcast-hls#readme",
+  "license": "MIT",
+  "keywords": [
+    "hls",
+    "m3u8",
+    "iptv",
+    "video-player",
+    "nextjs",
+    "typescript",
+    "cors-proxy",
+    "telemetry",
+    "multi-view",
+    "streaming"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",

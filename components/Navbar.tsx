@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   PlayCircle,
   Grid,
   History,
   Settings,
-  ShieldCheck,
-  ShieldAlert,
   Tv,
   Menu,
   X,
+  Github,
 } from "lucide-react";
+import { NavTabs, NavTabType } from "./common/NavTabs";
+import { ProxyToggle } from "./common/ProxyToggle";
 
 interface NavbarProps {
-  activeTab: "player" | "iptv" | "multiview" | "history" | "settings";
-  setActiveTab: (tab: "player" | "iptv" | "multiview" | "history" | "settings") => void;
+  activeTab: NavTabType;
+  setActiveTab: (tab: NavTabType) => void;
   useProxy: boolean;
   setUseProxy: (val: boolean) => void;
   activeStreamCount?: number;
@@ -30,14 +31,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleTabClick = (tab: "player" | "iptv" | "multiview" | "history" | "settings") => {
-    setActiveTab(tab);
-    setMobileMenuOpen(false);
-  };
+  const handleTabClick = useCallback(
+    (tab: NavTabType) => {
+      setActiveTab(tab);
+      setMobileMenuOpen(false);
+    },
+    [setActiveTab]
+  );
+
+  const handleToggleProxy = useCallback(() => {
+    setUseProxy(!useProxy);
+  }, [useProxy, setUseProxy]);
 
   return (
-    <header className="w-full bg-[#141414] border-b border-[#2A2A2D] px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-50 mb-4 sm:mb-6 rounded-b-xl sm:rounded-none">
-      <div className="flex items-center justify-between gap-2.5">
+    <header className="w-full bg-[#141414] border-b border-[#2A2A2D] sticky top-0 z-50 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         {/* Brand Title */}
         <div
           className="cursor-pointer select-none flex items-center gap-2"
@@ -49,98 +57,26 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Desktop Navigation Tabs */}
-        <nav className="hidden md:flex items-center p-1 bg-[#0B0B0C] border border-[#2A2A2D] rounded-[10px]">
-          <button
-            onClick={() => handleTabClick("player")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === "player"
-                ? "bg-white text-black shadow-sm"
-                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
-            }`}
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            <span>Player</span>
-          </button>
+        <NavTabs
+          activeTab={activeTab}
+          onSelectTab={handleTabClick}
+          activeStreamCount={activeStreamCount}
+        />
 
-          <button
-            onClick={() => handleTabClick("iptv")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === "iptv"
-                ? "bg-white text-black shadow-sm"
-                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
-            }`}
-          >
-            <Tv className="w-3.5 h-3.5 text-red-500" />
-            <span>IPTV Guide</span>
-          </button>
+        {/* Right Action Bar: Proxy Toggle & GitHub Redirect Icon */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ProxyToggle useProxy={useProxy} onToggleProxy={handleToggleProxy} />
 
-          <button
-            onClick={() => handleTabClick("multiview")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === "multiview"
-                ? "bg-white text-black shadow-sm"
-                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
-            }`}
+          {/* GitHub Icon Button Redirect */}
+          <a
+            href="https://github.com/Muhammed-Rizin/broadcast-hls"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 sm:p-2 rounded-lg bg-[#1B1B1D] hover:bg-[#27272A] border border-white/10 text-white transition-colors flex items-center justify-center"
+            title="Redirect to GitHub Repository (Muhammed-Rizin/broadcast-hls)"
           >
-            <Grid className="w-3.5 h-3.5" />
-            <span>Multi-View</span>
-            {activeStreamCount > 0 && (
-              <span className="px-1.5 py-0.2 text-[10px] bg-black/20 text-black rounded-full">
-                {activeStreamCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => handleTabClick("history")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === "history"
-                ? "bg-white text-black shadow-sm"
-                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
-            }`}
-          >
-            <History className="w-3.5 h-3.5" />
-            <span>History</span>
-          </button>
-
-          <button
-            onClick={() => handleTabClick("settings")}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[8px] text-xs font-semibold transition-all ${
-              activeTab === "settings"
-                ? "bg-white text-black shadow-sm"
-                : "text-[#B6B6B8] hover:text-white hover:bg-[#1B1B1D]"
-            }`}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>Settings</span>
-          </button>
-        </nav>
-
-        {/* Right Action Bar: Proxy Toggle Pill & Mobile Menu Toggle */}
-        <div className="flex items-center gap-1.5 sm:gap-3">
-          <button
-            onClick={() => setUseProxy(!useProxy)}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[8px] sm:rounded-[10px] text-[11px] sm:text-xs font-semibold border transition-all ${
-              useProxy
-                ? "bg-[#222326] border-[#2A2A2D] text-white"
-                : "bg-[#141414] border-[#2A2A2D] text-[#7A7A7D] hover:text-white"
-            }`}
-            title="Toggle Backend Proxy mode to bypass CORS & Mixed-Content HTTP/HTTPS restrictions"
-          >
-            {useProxy ? (
-              <>
-                <ShieldCheck className="w-3.5 h-3.5 text-[#22C55E]" />
-                <span className="hidden sm:inline">Proxy Active</span>
-                <span className="sm:hidden">Proxy</span>
-              </>
-            ) : (
-              <>
-                <ShieldAlert className="w-3.5 h-3.5 text-[#7A7A7D]" />
-                <span className="hidden sm:inline">Direct Mode</span>
-                <span className="sm:hidden">Direct</span>
-              </>
-            )}
-          </button>
+            <Github className="w-4 h-4 text-white" />
+          </a>
 
           {/* Mobile Hamburger Toggle Button */}
           <button
@@ -159,7 +95,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Expandable Navigation Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-2.5 mt-2.5 border-t border-white/10 flex flex-col gap-1 animate-fadeIn">
+        <div className="md:hidden px-4 pb-3 pt-2 border-t border-white/10 flex flex-col gap-1.5 animate-fadeIn bg-[#141414]">
           <button
             onClick={() => handleTabClick("player")}
             className={`flex items-center gap-3 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${

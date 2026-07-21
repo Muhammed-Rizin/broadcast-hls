@@ -1,10 +1,10 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-import React, { useState } from "react";
-import { Tv, Search, X, Play, ShieldAlert, Star } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Tv, Search, X, ShieldAlert } from "lucide-react";
 import { IptvChannel, IptvPlaylist } from "@/utils/m3uParser";
 import { useIptvStore } from "@/hooks/useIptvStore";
+import { IptvChannelRow } from "./iptv/IptvChannelRow";
 
 interface IptvChannelGuideProps {
   isOpen: boolean;
@@ -26,21 +26,30 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [visibleCount, setVisibleCount] = useState(60);
 
+  const filteredChannels = useMemo(() => {
+    if (!playlist) return [];
+    const query = searchQuery.toLowerCase();
+    const cat = selectedCategory.toLowerCase();
+
+    return playlist.channels.filter((channel) => {
+      const matchesSearch =
+        !query ||
+        channel.name.toLowerCase().includes(query) ||
+        (channel.group && channel.group.toLowerCase().includes(query));
+
+      const matchesCategory =
+        selectedCategory === "all" ||
+        (channel.group && channel.group.toLowerCase().includes(cat));
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [playlist, searchQuery, selectedCategory]);
+
+  const pagedChannels = useMemo(() => {
+    return filteredChannels.slice(0, visibleCount);
+  }, [filteredChannels, visibleCount]);
+
   if (!isOpen || !playlist) return null;
-
-  const filteredChannels = playlist.channels.filter((channel) => {
-    const matchesSearch =
-      channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (channel.group && channel.group.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const matchesCategory =
-      selectedCategory === "all" ||
-      (channel.group && channel.group.toLowerCase().includes(selectedCategory.toLowerCase()));
-
-    return matchesSearch && matchesCategory;
-  });
-
-  const pagedChannels = filteredChannels.slice(0, visibleCount);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex justify-end animate-fadeIn">
@@ -130,83 +139,17 @@ export const IptvChannelGuide: React.FC<IptvChannelGuideProps> = ({
             </div>
           ) : (
             <>
-              {pagedChannels.map((channel) => {
-                const isActive = channel.streamUrl === currentStreamUrl;
-                const fav = isFavorite(channel.streamUrl);
-                return (
-                  <div
-                    key={channel.id}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left group ${
-                      isActive
-                        ? "bg-red-600/15 border-red-500/50 text-white shadow-md"
-                        : "bg-[#18181B]/60 hover:bg-[#27272A] border-white/5 text-[#D4D4D8]"
-                    }`}
-                  >
-                    <div
-                      onClick={() => {
-                        onSelectChannel(channel);
-                        onClose();
-                      }}
-                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
-                    >
-                      {/* Logo / Thumbnail */}
-                      {channel.logo ? (
-                        <img
-                          src={channel.logo}
-                          alt={channel.name}
-                          className="w-7 h-7 object-contain rounded bg-black/40 p-0.5 flex-shrink-0 border border-white/10"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-7 h-7 rounded bg-white/10 flex items-center justify-center text-[10px] font-mono font-bold text-[#A1A1AA] flex-shrink-0">
-                          {channel.name.substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-xs font-semibold truncate group-hover:text-white transition-colors">
-                          {channel.name}
-                        </h3>
-                        {channel.group && (
-                          <span className="text-[10px] font-mono text-[#A1A1AA] block truncate">
-                            {channel.group}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => toggleFavorite(channel)}
-                        className={`p-1 rounded transition-colors ${
-                          fav ? "text-yellow-400" : "text-[#555558] hover:text-white"
-                        }`}
-                        title={fav ? "Remove from Favorites" : "Add to Favorites"}
-                      >
-                        <Star className={`w-3.5 h-3.5 ${fav ? "fill-current" : ""}`} />
-                      </button>
-
-                      {isActive ? (
-                        <span className="flex items-center gap-1 text-[10px] font-bold font-mono text-red-500 px-1.5 py-0.5 rounded bg-red-500/10">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            onSelectChannel(channel);
-                            onClose();
-                          }}
-                          className="w-6 h-6 rounded bg-white/10 group-hover:bg-white text-black flex items-center justify-center transition-all"
-                        >
-                          <Play className="w-3 h-3 fill-black ml-0.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {pagedChannels.map((channel) => (
+                <IptvChannelRow
+                  key={channel.id}
+                  channel={channel}
+                  isActive={channel.streamUrl === currentStreamUrl}
+                  isFav={isFavorite(channel.streamUrl)}
+                  onSelectChannel={onSelectChannel}
+                  onToggleFavorite={toggleFavorite}
+                  onClose={onClose}
+                />
+              ))}
 
               {filteredChannels.length > visibleCount && (
                 <div className="p-3 text-center">

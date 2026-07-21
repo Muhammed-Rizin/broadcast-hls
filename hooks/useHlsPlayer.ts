@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Hls from 'hls.js';
-import { HlsMetrics, QualityLevel, StreamHealth, TrackInfo } from '@/types/stream';
+import { HlsMetrics, QualityLevel, StreamHealth, TrackInfo, HTMLVideoElementWithQuality } from '@/types/stream';
 
 export type GranularStatus =
   | 'Connecting...'
@@ -411,8 +411,8 @@ export function useHlsPlayer({ streamUrl, useProxy, autoPlay = true }: UseHlsPla
       // Dropped frames
       let dropped = 0;
       let total = 0;
-      if ('getVideoPlaybackQuality' in video) {
-        const quality = (video as any).getVideoPlaybackQuality();
+      if ('getVideoPlaybackQuality' in video && typeof video.getVideoPlaybackQuality === 'function') {
+        const quality = video.getVideoPlaybackQuality();
         dropped = quality.droppedVideoFrames || 0;
         total = quality.totalVideoFrames || 0;
       }

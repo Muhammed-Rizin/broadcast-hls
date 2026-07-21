@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface VariantInfo {
   index: number;
   bandwidth: number;
@@ -78,4 +80,24 @@ export interface StreamHistoryItem {
   isFavorite?: boolean;
   status?: HealthStatusType;
   resolution?: string;
+}
+
+export type HTMLVideoElementWithQuality = HTMLVideoElement;
+
+
+export interface IptvPreset {
+  name: string;
+  url: string;
+  description: string;
+  tag: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+export interface SampleStreamPreset {
+  name: string;
+  url: string;
+  requiresProxy: boolean;
+  tag: string;
+  isIptv?: boolean;
 }

@@ -1,12 +1,12 @@
 # broadcast-hls
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-15.1-black?logo=next.js)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://www.typescriptlang.org)
 [![HLS.js](https://img.shields.io/badge/HLS.js-1.5-orange)](https://github.com/video-dev/hls.js)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
 
-> **broadcast-hls** is a professional HTTP Live Streaming (HLS `.m3u8`) and IPTV (`.m3u`) web platform engineered for live stream playback, real-time telemetry analytics, multi-stream monitoring, IPTV playlist management, and zero-copy CORS/Mixed-Content proxying.
+> **broadcast-hls** is a professional HTTP Live Streaming (HLS `.m3u8`) and IPTV (`.m3u`) web platform engineered for live stream playback, real-time telemetry analytics, multi-stream monitoring, IPTV playlist management, channel zapping, and zero-copy CORS/Mixed-Content proxying.
 
 ---
 
@@ -16,9 +16,11 @@
 - [Audit & Architectural Improvements](#audit--architectural-improvements)
   - [1. Media Engine Resilience & Auto-Recovery](#1-media-engine-resilience--auto-recovery)
   - [2. High-Throughput Zero-Copy Stream Proxy](#2-high-throughput-zero-copy-stream-proxy)
-  - [3. IPTV Playlist Engine & Local Storage Persistence](#3-iptv-playlist-engine--local-storage-persistence)
-  - [4. Mobile-First Responsive Design](#4-mobile-first-responsive-design)
-  - [5. Framework Alignment & CSS Architecture](#5-framework-alignment--css-architecture)
+  - [3. IPTV Playlist Engine & Default Auto-Seeding](#3-iptv-playlist-engine--default-auto-seeding)
+  - [4. Player Controls & Settings Popover Redesign](#4-player-controls--settings-popover-redesign)
+  - [5. Component Modularization & Sub-Directories](#5-component-modularization--sub-directories)
+  - [6. Mobile-First Responsive Design](#6-mobile-first-responsive-design)
+  - [7. Framework Alignment & CSS Architecture](#7-framework-alignment--css-architecture)
 - [Understanding HLS & IPTV Playlists](#understanding-hls--iptv-playlists)
   - [What is HLS?](#what-is-hls)
   - [What is an IPTV M3U Playlist?](#what-is-an-iptv-m3u-playlist)
@@ -49,7 +51,7 @@ Testing, monitoring, and playing live HLS streams over the open web introduces t
 
 ## Audit & Architectural Improvements
 
-Following an in-depth codebase audit, the following technical enhancements were implemented across the architecture:
+Following an in-depth codebase audit and refactoring process, the following technical enhancements were implemented across the architecture:
 
 ### 1. Media Engine Resilience & Auto-Recovery
 - **2-Stage Media Error Handling**: Implemented multi-tier media error recovery inside `hooks/useHlsPlayer.ts`. On first media error, the engine executes `recoverMediaError()`. On second consecutive failure, it calls `swapAudioCodec()` to switch audio demuxers before retrying media decoding.
@@ -57,21 +59,34 @@ Following an in-depth codebase audit, the following technical enhancements were 
 - **Memory Leak Protection**: Enhanced component unmount logic by detaching media (`hls.detachMedia()`), stopping segment loading (`hls.stopLoad()`), destroying instances (`hls.destroy()`), and resetting video source attributes (`video.removeAttribute('src'); video.load()`).
 
 ### 2. High-Throughput Zero-Copy Stream Proxy
-- **Zero-Copy Streaming**: Refactored `/api/stream/proxy` to pipe binary media chunks (`.ts`, `.m4s`, `.mp4`, `.aac`) directly using Web `ReadableStream` instead of buffering payloads into server RAM via `ArrayBuffer`.
+- **Zero-Copy Streaming**: Refactored `/api/stream/proxy` to pipe binary media chunks (`.ts`, `.m4s`, `.mp4`, `.aac`) directly using Web `ReadableStream` instead of buffering payloads into server RAM via `ArrayBuffer` or inspecting text, resolving Node `fetch` stream locking 500 Internal Server Errors.
 - **Custom Header Passthrough**: Added support for `ua` (User-Agent) and `referer` search parameters to forward custom headers required by strict IPTV servers.
 - **Proxy Unwrapping Helper**: Added `cleanStreamUrl` to unwrap nested proxy paths and extract clean target stream URLs.
 
-### 3. IPTV Playlist Engine & Local Storage Persistence
-- **M3U Parser (`utils/m3uParser.ts`)**: Parses `#EXTINF` metadata (`tvg-logo`, `group-title`, `tvg-country`, `tvg-language`) and `#EXTVLCOPT` custom headers.
+### 3. IPTV Playlist Engine & Default Auto-Seeding
+- **Default 12,000+ All Channels Index**: Updated default IPTV channel guide auto-seed to the main **All Channels Index (`index.m3u`)**.
+- **M3U Metadata Parser (`utils/m3uParser.ts`)**: Parses `#EXTINF` metadata (`tvg-logo`, `group-title`, `tvg-country`, `tvg-language`) and `#EXTVLCOPT` custom headers.
 - **Local Storage State Store (`hooks/useIptvStore.ts`)**: Saves imported playlists, active selection, and starred favorite channels (⭐) across browser sessions.
-- **Disk File Upload**: Users can upload local `.m3u` / `.m3u8` playlist files directly from their device storage.
-- **TV Zapping**: Flipping channels via control bar buttons or keyboard shortcuts (`N` / `P` and `PageUp` / `PageDown`).
+- **Disk File Upload**: Direct `.m3u` and `.m3u8` file disk parsing.
 
-### 4. Mobile-First Responsive Design
-- **Responsive Navbar**: Designed a collapsible mobile navigation drawer with touch-optimized buttons and hamburger toggle (`Menu` / `X`).
-- **Touch-Friendly Controls**: Responsive control bars, gesture support, and touch-optimized sliders.
+### 4. Player Controls & Settings Popover Redesign
+- **Top-Left Video Overlay LIVE Badge**: Relocated the LIVE sync indicator (`[🔴 LIVE]`) to a sleek top-left video stage overlay alongside the channel title, freeing up bottom control bar real estate.
+- **Hierarchical Settings Menu**: Created a macOS/iOS style flyout menu (`components/player/menu/`) with submenus for Quality (`QualityMenu.tsx`), Audio Tracks (`AudioMenu.tsx`), Subtitles (`SubtitleMenu.tsx`), Playback Speed (`SpeedMenu.tsx`), and Low Latency mode.
+- **Auto-Hide Freeze State**: Automatically freezes the 2.5s auto-hide timer whenever Settings or diagnostic modals are open.
+- **TV Zapping Pill**: Added explicit `ChannelZapButtons.tsx` component with channel counter and hotkeys (`N` / `P`).
 
-### 5. Framework Alignment & CSS Architecture
+### 5. Component Modularization & Sub-Directories
+- **Clean Component Separation**: Extracted component sub-domains:
+  - `components/common/`: `StreamInput.tsx`, `StreamUrlForm.tsx`, `StreamSamplePresets.tsx`, `StreamValidationBadge.tsx`, `ProxyToggle.tsx`, `Footer.tsx`.
+  - `components/iptv/`: `IptvPresetGrid.tsx`, `IptvImportBar.tsx`, `IptvViewControls.tsx`, `IptvCategoryPills.tsx`, `IptvChannelCard.tsx`.
+  - `components/player/menu/`: `QualityMenu.tsx`, `AudioMenu.tsx`, `SubtitleMenu.tsx`, `SpeedMenu.tsx`.
+  - `hooks/`: Extracted state & event handlers into `useMainApp.ts`, `useHlsPlayer.ts`, `useIptvStore.ts`, `useKeyboardShortcuts.ts`, and `useStreamHistory.ts`.
+
+### 6. Mobile-First Responsive Design
+- **Responsive Navigation Header**: Designed a collapsible mobile navigation drawer with touch-optimized buttons and hamburger toggle (`Menu` / `X`).
+- **Touch Gesture Overlay**: Large centered play/pause and ±10s seek buttons overlayed on video stage for mobile tap interaction.
+
+### 7. Framework Alignment & CSS Architecture
 - **Next.js Font Optimization**: Configured Google Fonts (`Inter` and `JetBrains Mono`) using `next/font/google` in `app/layout.tsx` for zero Cumulative Layout Shift (CLS).
 - **Tailwind CSS Directive Ordering**: Cleaned `app/globals.css` to begin directly with `@tailwind base; @tailwind components; @tailwind utilities;` in accordance with Next.js framework setup guides.
 
@@ -93,7 +108,7 @@ http://example.com/live/espn.m3u8
 ### Curated IPTV Categories Included
 
 The application includes 8 pre-configured global IPTV playlist presets:
-1. **All Channels (12,000+)**: `https://iptv-org.github.io/iptv/index.m3u`
+1. **All Channels (12,000+ Default Index)**: `https://iptv-org.github.io/iptv/index.m3u`
 2. **Grouped by Category**: `https://iptv-org.github.io/iptv/index.category.m3u`
 3. **News Channels (930+)**: `https://iptv-org.github.io/iptv/categories/news.m3u`
 4. **Sports Channels (320+)**: `https://iptv-org.github.io/iptv/categories/sports.m3u`
@@ -121,14 +136,14 @@ The serverless proxy route ([/api/stream/proxy](file:///d:/development/projects/
 
 ## Key Features
 
-- **Hero Video Player**: Built on `hls.js` with auto-hiding controls after 2.5 seconds of inactivity.
-- **IPTV Playlist Manager**: Full IPTV tab with LocalStorage persistence, file disk upload, and search.
-- **TV Zapping**: Next/Previous channel flipping via player buttons or `N` / `P` keyboard keys.
-- **Starred Favorites**: Star favorite channels for instant access across sessions.
+- **Hero Video Player**: Built on `hls.js` with top-left overlay LIVE badge, space-saving controls, and auto-hide freeze state.
+- **IPTV Playlist Manager**: Full IPTV tab with LocalStorage persistence, disk upload, and search across 12,000+ streams.
+- **TV Zapping**: Next/Previous channel flipping via control bar buttons or keyboard shortcuts (`N` / `P`).
+- **Starred Favorites**: Star favorite channels (⭐) for instant access across sessions.
 - **4K UHD & Multi-Quality Selector**: Supports adaptive Auto mode or forced quality levels (4K 2160p, 1440p, 1080p, 720p).
-- **10s Seek Controls & Live Edge Sync**: Quick -10s and +10s seek buttons alongside a one-click LIVE edge synchronization button.
+- **10s Seek Controls & Live Edge Sync**: Quick -10s and +10s seek buttons alongside top-left LIVE edge synchronization.
 - **Multi-Audio Track & WebVTT Subtitles**: Switch multi-language audio tracks and toggle closed captions.
-- **CORS & HTTP Proxy Engine**: Toggleable proxying for seamless playback of restricted or HTTP streams.
+- **CORS & HTTP Proxy Engine**: Toggleable zero-copy proxying for seamless playback of restricted or HTTP streams.
 - **Real-time Telemetry & Health Panel**: Live monitoring of buffer length, latency to live edge, FPS, dropped frames, and download speed.
 - **Multi-Stream Grid**: View up to 4 concurrent live streams in a 2x2 multi-view layout with independent volume and fullscreen controls.
 - **Stream History**: Persists recent stream URLs in browser `localStorage`.
@@ -143,38 +158,60 @@ The serverless proxy route ([/api/stream/proxy](file:///d:/development/projects/
 broadcast-hls/
 ├── app/
 │   ├── api/stream/
-│   │   ├── proxy/route.ts        # Serverless zero-copy CORS & HTTP proxy
-│   │   ├── validate/route.ts     # Stream manifest & header validator
-│   │   ├── health/route.ts       # Latency & ping health probe
-│   │   └── history/route.ts      # Server-side history endpoint
-│   ├── globals.css               # CSS design system tokens & utilities
-│   ├── layout.tsx                # Root layout, next/font optimization & meta tags
-│   └── page.tsx                  # Main app container & tab router
+│   │   ├── proxy/route.ts            # Serverless zero-copy CORS & HTTP proxy
+│   │   ├── validate/route.ts         # Stream manifest & header validator
+│   │   ├── health/route.ts           # Latency & ping health probe
+│   │   └── history/route.ts          # Server-side history endpoint
+│   ├── globals.css                   # CSS design system tokens & utilities
+│   ├── layout.tsx                    # Root layout, next/font optimization & meta tags
+│   └── page.tsx                      # Main app container & tab router
 ├── components/
+│   ├── common/
+│   │   ├── Footer.tsx                # Application footer component
+│   │   ├── ProxyToggle.tsx           # CORS Proxy toggle switch
+│   │   ├── StreamInput.tsx           # Stream URL input bar
+│   │   ├── StreamSamplePresets.tsx   # Quick stream sample preset chips
+│   │   ├── StreamUrlForm.tsx         # Main URL form input
+│   │   └── StreamValidationBadge.tsx # Stream validation status badge
+│   ├── iptv/
+│   │   ├── IptvCategoryPills.tsx     # Category filter pills
+│   │   ├── IptvChannelCard.tsx       # Channel card item
+│   │   ├── IptvImportBar.tsx         # Playlist import & file upload bar
+│   │   ├── IptvPresetGrid.tsx        # Preset playlist cards
+│   │   └── IptvViewControls.tsx      # Search & grid/list layout controls
 │   ├── player/
-│   │   ├── VideoPlayer.tsx       # Core video player & lifecycle
-│   │   ├── PlayerControls.tsx    # Mobile & desktop playback bar with TV zapping
-│   │   ├── SettingsMenu.tsx      # Quality, audio, speed flyout menu
-│   │   ├── ProgressBar.tsx       # Buffer progress indicator
-│   │   ├── VolumeControl.tsx     # Volume slider & mute toggle
-│   │   └── StreamInfoModal.tsx   # Stream telemetry modal
+│   │   ├── menu/
+│   │   │   ├── AudioMenu.tsx         # Multi-audio track selector
+│   │   │   ├── QualityMenu.tsx       # 4K UHD / HD video quality menu
+│   │   │   ├── SpeedMenu.tsx         # Playback speed menu
+│   │   │   └── SubtitleMenu.tsx      # Closed caption subtitles menu
+│   │   ├── ChannelZapButtons.tsx     # TV Zapping channel buttons
+│   │   ├── KeyboardShortcutsModal.tsx# Hotkeys documentation modal
+│   │   ├── PlayerControls.tsx        # Bottom playback control bar
+│   │   ├── PlayerOverlayMessages.tsx # Error & loading status overlay
+│   │   ├── PlayerSkeleton.tsx        # Video player skeleton loader
+│   │   ├── ProgressBar.tsx           # Timeline buffer progress bar
+│   │   ├── SettingsMenu.tsx          # Hierarchical settings popover
+│   │   ├── StreamInfoModal.tsx       # Diagnostic telemetry modal
+│   │   ├── VideoPlayer.tsx           # Core video player & stage overlay
+│   │   └── VolumeControl.tsx         # Mute & volume slider
 │   ├── telemetry/
-│   │   └── StreamHealthPanel.tsx # Telemetry gauge & health dashboard
-│   ├── IptvPlaylistTab.tsx       # Full IPTV channel guide & playlist manager tab
-│   ├── IptvChannelGuide.tsx      # Responsive IPTV channel drawer
-│   ├── MultiView.tsx             # 2x2 multi-stream grid player
-│   ├── Navbar.tsx                # Responsive navigation header with mobile menu
-│   ├── RecentStreams.tsx         # Stream history list
-│   └── StreamInput.tsx           # Stream URL input bar & presets
+│   │   └── StreamHealthPanel.tsx     # Diagnostic health panel & metrics
+│   ├── IptvChannelGuide.tsx          # Responsive IPTV channel drawer
+│   ├── IptvPlaylistTab.tsx           # Full IPTV channel guide tab
+│   ├── MultiView.tsx                 # 2x2 multi-stream grid player
+│   ├── Navbar.tsx                    # Responsive navigation header
+│   └── RecentStreams.tsx             # Stream history list
 ├── hooks/
-│   ├── useHlsPlayer.ts           # hls.js player lifecycle & auto-recovery hook
-│   ├── useIptvStore.ts           # LocalStorage IPTV playlist & favorites store
-│   ├── useKeyboardShortcuts.ts   # Keyboard event listeners with TV zapping
-│   └── useStreamHistory.ts       # LocalStorage state persistence
+│   ├── useHlsPlayer.ts               # hls.js lifecycle & auto-recovery hook
+│   ├── useIptvStore.ts               # LocalStorage IPTV store (Default: index.m3u)
+│   ├── useKeyboardShortcuts.ts       # Keyboard shortcuts listener
+│   ├── useMainApp.ts                 # Main page state container hook
+│   └── useStreamHistory.ts           # LocalStorage stream history hook
 ├── utils/
-│   └── m3uParser.ts              # M3U IPTV parser & URL unwrapper utility
+│   └── m3uParser.ts                  # M3U IPTV parser & URL unwrapper utility
 ├── types/
-│   └── stream.ts                 # TypeScript types for metrics & tracks
+│   └── stream.ts                     # TypeScript interfaces
 ├── package.json
 └── README.md
 ```
@@ -218,8 +255,8 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 
 ### 3. Linting & Production Build
 ```bash
-# Run ESLint check & auto-fix
-npm run format
+# Run ESLint check
+npm run lint
 
 # Compile Next.js production build
 npm run build

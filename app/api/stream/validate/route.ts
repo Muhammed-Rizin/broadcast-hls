@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StreamValidationResult, VariantInfo } from '@/types/stream';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -181,7 +183,7 @@ export async function POST(req: NextRequest) {
     console.error('Validation API Error:', error);
     return NextResponse.json(
       { valid: false, error: error.message || 'Stream validation failed' },
-      { status: 200 } // Return 200 with valid: false to present friendly UI error
+      { status: 200 }
     );
   }
 }

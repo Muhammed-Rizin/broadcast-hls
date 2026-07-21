@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -63,27 +65,14 @@ export async function GET(req: NextRequest) {
     const isM3u8ContentType =
       contentType.includes('mpegurl') ||
       contentType.includes('apple') ||
-      contentType.includes('application/x-mpegurl');
+      contentType.includes('application/x-mpegurl') ||
+      contentType.includes('audio/mpegurl') ||
+      contentType.includes('vnd.apple.mpegurl');
 
-    let isPlaylist = isM3u8Extension || isM3u8ContentType;
-
-    // Fallback: peek body for generic text/plain or octet-stream responses
-    let bodyText = '';
-    if (isPlaylist) {
-      bodyText = await upstreamResponse.text();
-    } else if (contentType.includes('text/plain') || contentType.includes('octet-stream') || !contentType) {
-      const cloned = upstreamResponse.clone();
-      const sampleText = await cloned.text();
-      if (sampleText.trim().startsWith('#EXTM3U')) {
-        isPlaylist = true;
-        bodyText = sampleText;
-      }
-    }
+    const isPlaylist = isM3u8Extension || isM3u8ContentType;
 
     if (isPlaylist) {
-      if (!bodyText) {
-        bodyText = await upstreamResponse.text();
-      }
+      const bodyText = await upstreamResponse.text();
 
       // Build extra query params string to append to sub-resources
       let extraParams = '';

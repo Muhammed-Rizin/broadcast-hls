@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Settings,
   Sliders,
@@ -11,10 +11,13 @@ import {
   Keyboard,
   ChevronRight,
   ChevronLeft,
-  Check,
   Zap,
 } from 'lucide-react';
 import { QualityLevel, TrackInfo } from '@/types/stream';
+import { QualityMenu } from './menu/QualityMenu';
+import { AudioMenu } from './menu/AudioMenu';
+import { SubtitleMenu } from './menu/SubtitleMenu';
+import { SpeedMenu } from './menu/SpeedMenu';
 
 interface SettingsMenuProps {
   qualities: QualityLevel[];
@@ -32,6 +35,7 @@ interface SettingsMenuProps {
   onToggleLowLatency: () => void;
   onOpenStreamInfo: () => void;
   onOpenShortcuts: () => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 type ViewMode = 'main' | 'quality' | 'audio' | 'subtitles' | 'speed';
@@ -52,13 +56,23 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   onToggleLowLatency,
   onOpenStreamInfo,
   onOpenShortcuts,
+  onOpenChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('main');
 
-  const speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  // Notify parent component when settings popover opens or closes
+  useEffect(() => {
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  }, [isOpen, onOpenChange]);
 
-  // Deduplicate and sort qualities with useMemo
+  const closeMenu = useCallback(() => {
+    setIsOpen(false);
+    setViewMode('main');
+  }, []);
+
   const sortedQualities = useMemo(() => {
     const uniqueQualitiesMap = new Map<number | string, QualityLevel>();
     qualities.forEach((q) => {
@@ -99,22 +113,23 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
       {/* Trigger Gear Icon */}
       <button
         onClick={() => {
-          setIsOpen(!isOpen);
-          setViewMode('main');
+          const nextState = !isOpen;
+          setIsOpen(nextState);
+          if (!nextState) setViewMode('main');
         }}
-        className={`p-2 sm:p-2.5 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-[8px] border transition-all ${
+        className={`p-2 sm:p-2.5 min-w-[34px] min-h-[34px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center rounded-[8px] border transition-all ${
           isOpen
             ? 'bg-white text-black border-white shadow-lg'
             : 'bg-[#18181C]/90 hover:bg-[#27272A] border-white/10 text-[#B6B6B8] hover:text-white'
         }`}
         title="Playback Settings"
       >
-        <Settings className="w-4 h-4" />
+        <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
 
-      {/* Flyout Popover Container */}
+      {/* Touch-safe Mobile & Desktop Popover Container */}
       {isOpen && (
-        <div className="absolute bottom-12 right-0 w-72 max-w-[calc(100vw-2rem)] bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn">
+        <div className="absolute bottom-12 right-0 w-72 max-w-[calc(100vw-1.5rem)] bg-[#18181C]/95 backdrop-blur-2xl border border-white/15 rounded-[14px] p-2 z-50 shadow-[0_16px_48px_rgba(0,0,0,0.85)] text-xs font-sans animate-fadeIn max-h-[75vh] overflow-y-auto">
           {viewMode === 'main' && (
             <div className="space-y-1">
               <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1">
@@ -129,15 +144,15 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {/* Quality Submenu Trigger */}
               <button
                 onClick={() => setViewMode('quality')}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                     <Sliders className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                   </div>
-                  <span className="font-medium">Quality</span>
+                  <span className="font-medium truncate">Quality</span>
                 </div>
-                <div className="flex items-center gap-1 text-[#A1A1AA]">
+                <div className="flex items-center gap-1 text-[#A1A1AA] shrink-0">
                   <span className="font-mono text-[11px] font-semibold">{getActiveQualityName()}</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
@@ -147,15 +162,15 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {audioTracks.length > 0 && (
                 <button
                   onClick={() => setViewMode('audio')}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                       <Music className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                     </div>
-                    <span className="font-medium">Audio Track</span>
+                    <span className="font-medium truncate">Audio Track</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#A1A1AA]">
+                  <div className="flex items-center gap-1 text-[#A1A1AA] shrink-0">
                     <span className="font-mono text-[11px] font-semibold">{getActiveAudioName()}</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
@@ -166,15 +181,15 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {subtitleTracks.length > 0 && (
                 <button
                   onClick={() => setViewMode('subtitles')}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                       <Languages className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                     </div>
-                    <span className="font-medium">Subtitles</span>
+                    <span className="font-medium truncate">Subtitles</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#A1A1AA]">
+                  <div className="flex items-center gap-1 text-[#A1A1AA] shrink-0">
                     <span className="font-mono text-[11px] font-semibold">{getActiveSubtitleName()}</span>
                     <ChevronRight className="w-4 h-4" />
                   </div>
@@ -184,15 +199,15 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {/* Speed Submenu Trigger */}
               <button
                 onClick={() => setViewMode('speed')}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                     <Gauge className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                   </div>
-                  <span className="font-medium">Playback Speed</span>
+                  <span className="font-medium truncate">Playback Speed</span>
                 </div>
-                <div className="flex items-center gap-1 text-[#A1A1AA]">
+                <div className="flex items-center gap-1 text-[#A1A1AA] shrink-0">
                   <span className="font-mono text-[11px] font-semibold">
                     {playbackSpeed === 1.0 ? 'Normal' : `${playbackSpeed}x`}
                   </span>
@@ -203,15 +218,15 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {/* Low Latency Toggle */}
               <button
                 onClick={onToggleLowLatency}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                     <Zap className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                   </div>
-                  <span className="font-medium">Low Latency</span>
+                  <span className="font-medium truncate">Low Latency</span>
                 </div>
-                <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors flex items-center ${
+                <div className={`w-8 h-4.5 rounded-full p-0.5 transition-colors flex items-center shrink-0 ${
                   lowLatencyMode ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'
                 }`}>
                   <div className={`w-3.5 h-3.5 rounded-full bg-white transition-transform ${
@@ -225,29 +240,29 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               {/* Stream Information Trigger */}
               <button
                 onClick={() => {
-                  setIsOpen(false);
+                  closeMenu();
                   onOpenStreamInfo();
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
               >
-                <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                   <Activity className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                 </div>
-                <span className="font-medium">Stream Information</span>
+                <span className="font-medium truncate">Stream Information</span>
               </button>
 
               {/* Keyboard Shortcuts Trigger */}
               <button
                 onClick={() => {
-                  setIsOpen(false);
+                  closeMenu();
                   onOpenShortcuts();
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] text-[#D4D4D8] hover:bg-[#27272A] hover:text-white transition-all group text-left"
               >
-                <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors">
+                <div className="w-6 h-6 rounded-md bg-[#27272A] group-hover:bg-[#3F3F46] flex items-center justify-center transition-colors shrink-0">
                   <Keyboard className="w-3.5 h-3.5 text-[#A1A1AA] group-hover:text-white" />
                 </div>
-                <span className="font-medium">Keyboard Shortcuts</span>
+                <span className="font-medium truncate">Keyboard Shortcuts</span>
               </button>
             </div>
           )}
@@ -263,135 +278,39 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
             </button>
           )}
 
-          {/* Quality Submenu */}
           {viewMode === 'quality' && (
-            <div className="space-y-1 py-1 max-h-60 overflow-y-auto">
-              <button
-                onClick={() => {
-                  onSelectQuality(-1);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                  currentQualityIndex === -1
-                    ? 'bg-white text-black font-bold shadow-md'
-                    : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                }`}
-              >
-                <span>Auto (Adaptive)</span>
-                {currentQualityIndex === -1 && <Check className="w-4 h-4" />}
-              </button>
-              {sortedQualities.map((q) => (
-                <button
-                  key={q.id}
-                  onClick={() => {
-                    onSelectQuality(q.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                    currentQualityIndex === q.id
-                      ? 'bg-white text-black font-bold shadow-md'
-                      : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{q.name}</span>
-                    {q.height && q.height >= 2160 ? (
-                      <span className="text-[9px] font-bold px-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                        4K UHD
-                      </span>
-                    ) : q.height && q.height >= 1080 ? (
-                      <span className="text-[9px] font-bold px-1 rounded bg-[#22C55E]/20 text-[#22C55E] border border-emerald-500/30">
-                        HD
-                      </span>
-                    ) : null}
-                  </div>
-                  {currentQualityIndex === q.id && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
+            <QualityMenu
+              qualities={sortedQualities}
+              currentQualityIndex={currentQualityIndex}
+              onSelectQuality={onSelectQuality}
+              onClose={closeMenu}
+            />
           )}
 
-          {/* Audio Submenu */}
           {viewMode === 'audio' && (
-            <div className="space-y-1 py-1">
-              {audioTracks.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    onSelectAudioTrack(t.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                    currentAudioTrack === t.id
-                      ? 'bg-white text-black font-bold shadow-md'
-                      : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                  }`}
-                >
-                  <span>{t.name}</span>
-                  {currentAudioTrack === t.id && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
+            <AudioMenu
+              audioTracks={audioTracks}
+              currentAudioTrack={currentAudioTrack}
+              onSelectAudioTrack={onSelectAudioTrack}
+              onClose={closeMenu}
+            />
           )}
 
-          {/* Subtitles Submenu */}
           {viewMode === 'subtitles' && (
-            <div className="space-y-1 py-1">
-              <button
-                onClick={() => {
-                  onSelectSubtitleTrack(-1);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                  currentSubtitleTrack === -1
-                    ? 'bg-white text-black font-bold shadow-md'
-                    : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                }`}
-              >
-                <span>Off</span>
-                {currentSubtitleTrack === -1 && <Check className="w-4 h-4" />}
-              </button>
-              {subtitleTracks.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    onSelectSubtitleTrack(t.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                    currentSubtitleTrack === t.id
-                      ? 'bg-white text-black font-bold shadow-md'
-                      : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                  }`}
-                >
-                  <span>{t.name}</span>
-                  {currentSubtitleTrack === t.id && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
+            <SubtitleMenu
+              subtitleTracks={subtitleTracks}
+              currentSubtitleTrack={currentSubtitleTrack}
+              onSelectSubtitleTrack={onSelectSubtitleTrack}
+              onClose={closeMenu}
+            />
           )}
 
-          {/* Speed Submenu */}
           {viewMode === 'speed' && (
-            <div className="space-y-1 py-1">
-              {speedOptions.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onSelectPlaybackSpeed(s);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-[8px] font-mono transition-all ${
-                    playbackSpeed === s
-                      ? 'bg-white text-black font-bold shadow-md'
-                      : 'text-[#D4D4D8] hover:bg-[#27272A]'
-                  }`}
-                >
-                  <span>{s === 1.0 ? 'Normal (1.0x)' : `${s}x`}</span>
-                  {playbackSpeed === s && <Check className="w-4 h-4" />}
-                </button>
-              ))}
-            </div>
+            <SpeedMenu
+              playbackSpeed={playbackSpeed}
+              onSelectPlaybackSpeed={onSelectPlaybackSpeed}
+              onClose={closeMenu}
+            />
           )}
         </div>
       )}
